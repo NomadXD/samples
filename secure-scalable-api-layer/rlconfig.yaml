@@ -1,0 +1,13 @@
+---
+domain: default
+descriptors:
+  - key: version
+    value: v1
+    rate_limit:
+      unit: second
+      requests_per_unit: 5
+  - key: version
+    value: v2
+    rate_limit:
+      unit: second
+      requests_per_unit: 10

@@ -1,0 +1,77 @@
+version: "3.7"
+services:
+  proxy:
+    image: envoyproxy/envoy:v1.25.0
+    networks:
+      - envoymesh
+    ports:
+      - "9095:9095"
+      - "9000:9000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+
+  ext_authz:
+    build:
+      context: ./ext-authz
+      dockerfile: Dockerfile
+    networks:
+      - envoymesh
+    ports:
+      - "50051:50051"
+      - "50052:8080"
+
+  upstream_service:
+    image: solsson/http-echo:latest
+    networks:
+      - envoymesh
+    environment:
+      - PORT=8080
+      - TEXT="Hello from backend service"
+    ports:
+      - "8080:8080"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.37
+    networks:
+      - envoymesh
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+      - "4317:4317"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+  ratelimit:
+    image: envoyproxy/ratelimit:1a686864
+    command: /bin/ratelimit
+    networks:
+      - envoymesh
+    ports:
+      - "8081:8081"
+      - "6070:6070"
+    depends_on:
+      - redis
+    volumes:
+      - ./rlconfig.yaml:/data/ratelimit/config/rlconfig.yaml
+    environment:
+      - USE_STATSD=false
+      - LOG_LEVEL=trace
+      - REDIS_SOCKET_TYPE=tcp
+      - REDIS_URL=redis:6379
+      - RUNTIME_ROOT=/data
+      - RUNTIME_WATCH_ROOT=false
+      - RUNTIME_SUBDIRECTORY=ratelimit
+      # - CONFIG_TYPE=${CONFIG_TYPE:-FILE}
+
+  redis:
+    image: redis:alpine
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+    networks:
+      - envoymesh
+networks:
+  envoymesh: {}
