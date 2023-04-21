@@ -1,0 +1,29 @@
+version: "3"
+services:
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      - nginx-network
+
+  backend_dev:
+    image: solsson/http-echo:latest
+    networks:
+      - nginx-network
+    environment:
+      - PORT=8080
+      - TEXT="Hello from backend service"
+
+  backend_prod:
+    image: solsson/http-echo:latest
+    networks:
+      - nginx-network
+    environment:
+      - PORT=8080
+      - TEXT="Hello from backend service"
+
+networks:
+  nginx-network: {}
