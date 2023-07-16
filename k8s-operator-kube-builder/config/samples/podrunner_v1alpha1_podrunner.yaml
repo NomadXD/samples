@@ -1,0 +1,15 @@
+apiVersion: podrunner.nomadxd.io/v1alpha1
+kind: PodRunner
+metadata:
+  labels:
+    app.kubernetes.io/name: podrunner
+    app.kubernetes.io/instance: podrunner-sample
+    app.kubernetes.io/part-of: k8s-operator-kube-builder
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: k8s-operator-kube-builder
+  name: podrunner-sample
+spec:
+  # TODO(user): Add fields here
+  podName: test-pod
+  imageName: nginx:latest
+  namespace: default 

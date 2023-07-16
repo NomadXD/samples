@@ -1,0 +1,16 @@
+domain: nomadxd.io
+layout:
+- go.kubebuilder.io/v4-alpha
+projectName: k8s-operator-kube-builder
+repo: github.com/NomadXD/samples/k8s-operator-kube-builder
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: nomadxd.io
+  group: podrunner
+  kind: PodRunner
+  path: github.com/NomadXD/samples/k8s-operator-kube-builder/api/v1alpha1
+  version: v1alpha1
+version: "3"
