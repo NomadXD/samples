@@ -1,0 +1,33 @@
+# Cluster and Node Configuration
+clusterName: "opensearch-local-dev"
+singleNode: true # Crucial for a single-node OpenSearch deployment
+
+# Specify the OpenSearch Docker image and application version
+image:
+  repository: "opensearchproject/opensearch" # Official OpenSearch image
+  tag: "2.18.0"                               # Target OpenSearch APPLICATION version. Change if you need a different version.
+  pullPolicy: IfNotPresent
+
+extraEnvs:
+  - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+    # IMPORTANT: Replace this with your actual strong password!
+    value: "Jx9@Tr2!vnKq" # Initial admin password for OpenSearch
+
+# Configuration for the 'master' node pool.
+# When singleNode is true, these settings are typically applied to the single OpenSearch node.
+master: 
+  # JVM options for OpenSearch
+  opensearchJavaOpts: "-Xmx512M -Xms512M"
+  
+  # Persistence configuration (disabled for minimal local testing)
+  persistence:
+    enabled: false # Data will be lost if the pod restarts.
+
+  # Resource requests and limits for the OpenSearch pod
+  resources:
+    requests:
+      memory: "1Gi"   # Request 1 Gigabyte of RAM
+      cpu: "500m"     # Request 0.5 CPU core (millicores)
+    limits:
+      memory: "2Gi"   # Limit to 2 Gigabytes of RAM
+      cpu: "1"        # Limit to 1 CPU core
