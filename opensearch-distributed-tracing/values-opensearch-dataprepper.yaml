@@ -38,9 +38,9 @@ config:
   # -- Main Data Prepper configuration file content
   data-prepper-config.yaml: |
     ssl: false
-    peer_forwarder:
-      discovery_mode: "dns"
-      domain_name: "data-prepper-headless.opensearch-stack.svc.cluster.local"
+    # peer_forwarder:
+    #   discovery_mode: "dns"
+    #   domain_name: "data-prepper-headless.opensearch-stack.svc.cluster.local"
     # circuit_breakers:
     #   heap:
     #     usage: 2gb
