@@ -1,0 +1,45 @@
+# opensearch-dashboards-values.yaml
+
+replicaCount: 1 # Run a single instance for a minimal setup
+
+# Define resources for the Dashboards pod
+resources:
+  requests:
+    memory: "512Mi" # Request 512 Megabytes of RAM
+    cpu: "200m"     # Request 0.2 CPU core
+  limits:
+    memory: "1Gi"   # Limit to 1 Gigabyte of RAM
+    cpu: "500m"     # Limit to 0.5 CPU core
+
+# Configuration for opensearch_dashboards.yml
+# This tells Dashboards how to connect to your OpenSearch cluster
+config:
+  opensearch_dashboards.yml: |
+    server.host: "0.0.0.0"
+    opensearch.hosts: ["https://opensearch-cluster-master:9200"] # <-- !! REPLACE with your actual OpenSearch service URL !!
+    
+    # Credentials for Dashboards to connect to OpenSearch
+    # Use the admin user and the password you set for OpenSearch
+    opensearch.username: "admin"
+    opensearch.password: "TraceDemo@123" # <-- !! REPLACE with your OpenSearch admin password !!
+    # SSL settings for connecting to OpenSearch (which has security enabled)
+    opensearch.ssl.verificationMode: none # For local dev with self-signed certs. Use 'full' or 'certificate' in prod.
+    # If your OpenSearch uses a CA certificate that Dashboards should trust, configure it here:
+    # opensearch.ssl.certificateAuthorities: ["/path/to/ca.crt"] # Mount this via secrets/configmaps if needed
+
+    # Security plugin integration settings
+    opensearch_security.auth.type: "basicauth" # Use basic authentication
+    opensearch_security.multitenancy.enabled: true
+    opensearch_security.readonly_mode.roles: ["kibana_read_only"]
+    # Setting cookie to insecure for HTTP access to Dashboards locally. 
+    # If you expose Dashboards via HTTPS, set this to true.
+    opensearch_security.cookie.secure: false 
+
+# Service type for Dashboards
+service:
+  type: ClusterIP # Default, good for access via port-forwarding
+  port: 5601
+
+# Optional: Specify image tag if you want a specific Dashboards version
+image:
+  tag: "2.18.0" # Example: match OpenSearch app version. Or use latest chart default.
