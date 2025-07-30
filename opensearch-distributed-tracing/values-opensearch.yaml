@@ -11,7 +11,7 @@ image:
 extraEnvs:
   - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
     # IMPORTANT: Replace this with your actual strong password!
-    value: "Jx9@Tr2!vnKq" # Initial admin password for OpenSearch
+    value: "TraceDemo@123" # Initial admin password for OpenSearch
 
 # Configuration for the 'master' node pool.
 # When singleNode is true, these settings are typically applied to the single OpenSearch node.
