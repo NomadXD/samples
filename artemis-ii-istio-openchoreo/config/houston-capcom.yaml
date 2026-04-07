@@ -1,0 +1,32 @@
+identity: capcom
+cell: houston
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: POST
+    path: /uplink/command
+    response:
+      status: relayed
+      from: capcom
+      message: "Command relayed to Orion via DSN"
+    upstream:
+      url: "http://comms-system.ORION_NS.svc.cluster.local:8080/uplink"
+      method: POST
+      label: "orion/comms-system"
+
+  - method: POST
+    path: /uplink/voice
+    response:
+      status: transmitted
+      from: capcom
+      message: "Voice uplink to crew"
+      band: "S-band"
+
+  - method: GET
+    path: /downlink/telemetry
+    response:
+      status: receiving
+      source: "orion/comms-system"
+      relay: "dsn/signal-router"
+      dataRate: "800 kbps"

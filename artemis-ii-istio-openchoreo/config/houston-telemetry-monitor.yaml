@@ -1,0 +1,31 @@
+identity: telemetry-monitor
+cell: houston
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: POST
+    path: /ingest
+    response:
+      status: ingested
+      processingTime: "12ms"
+      anomalies: 0
+      message: "Telemetry frame processed successfully"
+
+  - method: GET
+    path: /dashboard
+    response:
+      systems:
+        guidance: nominal
+        lifesupport: nominal
+        power: nominal
+        thermal: nominal
+        comms: nominal
+      lastUpdate: "2s ago"
+
+  - method: GET
+    path: /alerts
+    response:
+      active: 0
+      history: []
+      message: "No active alerts"

@@ -1,0 +1,137 @@
+# Deep Space Network - 4 components
+---
+# Signal Router - routes signals between stations
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: signal-router
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: signal-router-workload
+  namespace: default
+spec:
+  owner:
+    componentName: signal-router
+    projectName: deep-space-network
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [namespace]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/dsn-signal-router.yaml"
+---
+# Goldstone - California antenna complex
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: goldstone
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: goldstone-workload
+  namespace: default
+spec:
+  owner:
+    componentName: goldstone
+    projectName: deep-space-network
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/dsn-goldstone.yaml"
+---
+# Madrid - Spain antenna complex
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: madrid
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: madrid-workload
+  namespace: default
+spec:
+  owner:
+    componentName: madrid
+    projectName: deep-space-network
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/dsn-madrid.yaml"
+---
+# Canberra - Australia antenna complex
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: canberra
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: canberra-workload
+  namespace: default
+spec:
+  owner:
+    componentName: canberra
+    projectName: deep-space-network
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/dsn-canberra.yaml"

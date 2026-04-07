@@ -1,0 +1,27 @@
+identity: ground-systems
+cell: kennedy
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /fuel/status
+    response:
+      lox: { level: "100%", temp: "-183C", pressure: "42 psi", status: "nominal" }
+      lh2: { level: "100%", temp: "-253C", pressure: "38 psi", status: "nominal" }
+      srb: { status: "armed", segments: 5 }
+
+  - method: POST
+    path: /fuel/pressurize
+    response:
+      status: pressurized
+      loxPressure: "42 psi"
+      lh2Pressure: "38 psi"
+
+  - method: GET
+    path: /umbilical/status
+    response:
+      groundPower: connected
+      fueling: complete
+      dataLinks: active
+      crewAccessArm: retracted

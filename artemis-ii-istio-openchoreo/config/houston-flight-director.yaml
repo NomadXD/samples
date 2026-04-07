@@ -1,0 +1,56 @@
+identity: flight-director
+cell: houston
+port: 8080
+serveUI: true
+
+endpoints:
+  - method: POST
+    path: /decision/go-nogo
+    response:
+      decision: GO
+      polled:
+        - { station: "KENNEDY/launch-control", status: "GO" }
+        - { station: "KENNEDY/weather-station", status: "GO" }
+        - { station: "HOUSTON/flight-dynamics", status: "GO" }
+        - { station: "ESA-OPS/service-module", status: "GO" }
+        - { station: "DSN/signal-router", status: "GO" }
+      message: "All stations GO for launch"
+
+  - method: POST
+    path: /decision/abort
+    response:
+      decision: ABORT
+      authority: flight-director
+      message: "Abort sequence initiated by Flight Director"
+
+  - method: GET
+    path: /mission/status
+    response:
+      phase: NOMINAL
+      met: "in-progress"
+      crew: ["Reid Wiseman", "Victor Glover", "Christina Koch", "Jeremy Hansen"]
+
+  - method: POST
+    path: /uplink/command
+    response:
+      command: acknowledged
+      relay: capcom
+      message: "Command uplinked to Orion via CAPCOM"
+    upstream:
+      url: "http://comms-system.dp-default-orion-development-HASH.svc.cluster.local:8080/uplink"
+      method: POST
+      label: "orion/comms-system"
+
+  - method: GET
+    path: /downlink/telemetry
+    response:
+      altitude: "384,400 km"
+      velocity: "7.81 km/s"
+      crewVitals: "ALL NOMINAL"
+      cabinPressure: "14.7 psi"
+      o2Level: "20.9%"
+      temperature: "22.1C"
+    upstream:
+      url: "http://signal-router.dp-default-deep-space-network-development-HASH.svc.cluster.local:8080/route"
+      method: GET
+      label: "dsn/signal-router"

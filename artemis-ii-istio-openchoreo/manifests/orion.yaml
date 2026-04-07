@@ -1,0 +1,137 @@
+# Orion Spacecraft - 4 components
+---
+# Guidance & Navigation - IMU, star tracker, burns
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: guidance-nav
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: guidance-nav-workload
+  namespace: default
+spec:
+  owner:
+    componentName: guidance-nav
+    projectName: orion
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/orion-guidance-nav.yaml"
+---
+# Life Support - ECLSS, crew vitals
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: life-support
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: life-support-workload
+  namespace: default
+spec:
+  owner:
+    componentName: life-support
+    projectName: orion
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/orion-life-support.yaml"
+---
+# Crew Interface - glass cockpit displays
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: crew-interface
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: crew-interface-workload
+  namespace: default
+spec:
+  owner:
+    componentName: crew-interface
+    projectName: orion
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/orion-crew-interface.yaml"
+---
+# Communications System - S-band/Ka-band, signal relay
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: comms-system
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: comms-system-workload
+  namespace: default
+spec:
+  owner:
+    componentName: comms-system
+    projectName: orion
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [namespace]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/orion-comms-system.yaml"

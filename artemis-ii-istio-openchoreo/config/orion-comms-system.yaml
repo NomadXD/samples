@@ -1,0 +1,41 @@
+identity: comms-system
+cell: orion
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: POST
+    path: /uplink
+    response:
+      status: received
+      subsystem: comms-system
+      message: "Command received by Orion communications system"
+      signalStrength: "-157.2 dBm"
+      band: "S-band"
+
+  - method: POST
+    path: /downlink
+    response:
+      status: transmitting
+      subsystem: comms-system
+      telemetry:
+        guidance: { altitude: "384,400 km", velocity: "7.81 km/s", trajectory: "nominal" }
+        lifesupport: { o2: "20.9%", co2: "0.04%", pressure: "14.7 psi", temp: "22.1C" }
+        crew: { status: "ALL NOMINAL", heartRates: [72, 68, 75, 70] }
+      band: "Ka-band"
+      dataRate: "800 kbps"
+
+  - method: GET
+    path: /signal/strength
+    response:
+      strength: "-157.2 dBm"
+      band: "S-band/Ka-band"
+      lockStatus: "ACQUIRED"
+
+  - method: POST
+    path: /antenna/orient
+    response:
+      status: adjusted
+      target: "DSN-GOLDSTONE"
+      elevation: "42.7 deg"
+      azimuth: "215.3 deg"

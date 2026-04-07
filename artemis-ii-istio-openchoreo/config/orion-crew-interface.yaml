@@ -1,0 +1,34 @@
+identity: crew-interface
+cell: orion
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /displays
+    response:
+      primaryDisplay: "NAV"
+      secondaryDisplay: "SYSTEMS"
+      cautionWarning: "none"
+      missionTimer: "running"
+
+  - method: POST
+    path: /crew/input
+    response:
+      status: acknowledged
+      input: "manual"
+      message: "Crew input received by onboard computer"
+
+  - method: GET
+    path: /alerts
+    response:
+      caution: []
+      warning: []
+      advisory: []
+      master: "OFF"
+
+  - method: POST
+    path: /crew/log
+    response:
+      status: logged
+      message: "Crew log entry recorded"

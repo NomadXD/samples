@@ -1,0 +1,69 @@
+# ESA Operations - 2 components
+---
+# Service Module Monitor - monitors the European Service Module
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: service-module-monitor
+  namespace: default
+spec:
+  owner:
+    projectName: esa-ops
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: service-module-monitor-workload
+  namespace: default
+spec:
+  owner:
+    componentName: service-module-monitor
+    projectName: esa-ops
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [namespace]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/esa-service-module-monitor.yaml"
+---
+# Mission Relay - bridges ESA ground stations to Houston
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: mission-relay
+  namespace: default
+spec:
+  owner:
+    projectName: esa-ops
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: mission-relay-workload
+  namespace: default
+spec:
+  owner:
+    componentName: mission-relay
+    projectName: esa-ops
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [namespace]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/esa-mission-relay.yaml"

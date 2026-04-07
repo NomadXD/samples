@@ -1,0 +1,41 @@
+# The Adversary - a rogue pod NOT managed by OpenChoreo.
+# Represents a foreign signal / compromised container attempting
+# to send unauthorized commands to the mission.
+#
+# This pod has NO OpenChoreo project, no declared dependencies,
+# and an unrecognized service account identity.
+# It will be blocked by:
+#   1. OpenChoreo Cell NetworkPolicies (L4)
+#   2. Istio ambient mTLS (unrecognized identity)
+#   3. Istio waypoint AuthorizationPolicy (L7 RBAC)
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: adversary
+  namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adversary
+  namespace: default
+  labels:
+    app: adversary
+    threat: "foreign-signal"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adversary
+  template:
+    metadata:
+      labels:
+        app: adversary
+        threat: "foreign-signal"
+    spec:
+      serviceAccountName: adversary
+      containers:
+        - name: adversary
+          image: curlimages/curl:latest
+          command: ["sleep", "infinity"]

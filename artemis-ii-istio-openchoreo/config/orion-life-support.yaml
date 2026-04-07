@@ -1,0 +1,31 @@
+identity: life-support
+cell: orion
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /cabin/atmosphere
+    response:
+      o2Percent: 20.9
+      co2Percent: 0.04
+      pressurePsi: 14.7
+      temperatureC: 22.1
+      humidityPercent: 45
+
+  - method: GET
+    path: /crew/vitals
+    response:
+      crew:
+        - { name: "Reid Wiseman", role: "Commander", heartRate: 72, bloodPressure: "120/80", status: "nominal" }
+        - { name: "Victor Glover", role: "Pilot", heartRate: 68, bloodPressure: "118/76", status: "nominal" }
+        - { name: "Christina Koch", role: "Mission Specialist", heartRate: 75, bloodPressure: "115/72", status: "nominal" }
+        - { name: "Jeremy Hansen", role: "Mission Specialist", heartRate: 70, bloodPressure: "122/78", status: "nominal" }
+
+  - method: GET
+    path: /consumables
+    response:
+      o2RemainingHours: 480
+      waterLiters: 120
+      foodDaysRemaining: 14
+      co2ScrubberStatus: nominal

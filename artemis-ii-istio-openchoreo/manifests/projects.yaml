@@ -1,0 +1,46 @@
+# 5 OpenChoreo Projects - each becomes an isolated Cell at runtime
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Project
+metadata:
+  name: houston
+  namespace: default
+spec:
+  deploymentPipelineRef:
+    name: default
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Project
+metadata:
+  name: kennedy
+  namespace: default
+spec:
+  deploymentPipelineRef:
+    name: default
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Project
+metadata:
+  name: orion
+  namespace: default
+spec:
+  deploymentPipelineRef:
+    name: default
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Project
+metadata:
+  name: deep-space-network
+  namespace: default
+spec:
+  deploymentPipelineRef:
+    name: default
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Project
+metadata:
+  name: esa-ops
+  namespace: default
+spec:
+  deploymentPipelineRef:
+    name: default

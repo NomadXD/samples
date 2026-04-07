@@ -1,0 +1,28 @@
+identity: mission-relay
+cell: esa-ops
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: POST
+    path: /relay/telemetry
+    response:
+      status: relayed
+      source: "esa-ops/service-module-monitor"
+      destination: "houston/telemetry-monitor"
+      dataSize: "1.8 KB"
+
+  - method: GET
+    path: /relay/status
+    response:
+      link: active
+      uptime: "99.97%"
+      lastRelay: "2s ago"
+      groundStation: "ESTRACK Malargue"
+
+  - method: POST
+    path: /relay/alert
+    response:
+      status: alert-sent
+      severity: "INFO"
+      message: "Routine ESM telemetry relay"

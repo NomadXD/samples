@@ -1,0 +1,32 @@
+identity: goldstone
+cell: deep-space-network
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /antenna/status
+    response:
+      station: "Goldstone Deep Space Communications Complex"
+      location: "Barstow, California"
+      antenna: "DSS-14 (70m)"
+      status: operational
+      tracking: "Artemis II / Orion MPCV"
+      elevation: "42.7 deg"
+      azimuth: "215.3 deg"
+
+  - method: POST
+    path: /track
+    response:
+      status: tracking
+      target: "Artemis II"
+      signalAcquired: true
+      strength: "-157.2 dBm"
+
+  - method: GET
+    path: /signal
+    response:
+      strength: "-157.2 dBm"
+      frequency: "2287.5 MHz"
+      band: "S-band"
+      bitErrorRate: "1e-7"

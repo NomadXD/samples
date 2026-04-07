@@ -1,0 +1,240 @@
+# Istio AuthorizationPolicies for the Artemis II mission.
+#
+# These enforce L7 access control within each Cell, complementing
+# OpenChoreo's L4 NetworkPolicies. The waypoint proxy evaluates
+# these rules based on SPIFFE identity and HTTP attributes.
+#
+# Replace namespace placeholders with actual runtime namespaces.
+
+---
+# HOUSTON CELL: Only the Istio gateway (external traffic) and
+# known internal identities can access the flight director.
+# Abort endpoint restricted to flight-director's own service account.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: flight-director-policy
+  # namespace: <houston-runtime-ns>
+spec:
+  targetRefs:
+    - kind: Service
+      group: ""
+      name: flight-director
+  action: ALLOW
+  rules:
+    # Gateway can access all endpoints
+    - from:
+        - source:
+            principals: ["cluster.local/ns/openchoreo-data-plane/sa/gateway-default-istio"]
+      to:
+        - operation:
+            methods: ["GET", "POST"]
+    # CAPCOM can access decision endpoints
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/capcom"]
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/mission/status"]
+    # Kennedy launch-control can POST handoff
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/launch-control"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/decision/go-nogo"]
+
+---
+# ORION CELL: Only Houston CAPCOM can send commands.
+# Crew vitals are classified - only life-support and CAPCOM can read.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: comms-system-policy
+  # namespace: <orion-runtime-ns>
+spec:
+  targetRefs:
+    - kind: Service
+      group: ""
+      name: comms-system
+  action: ALLOW
+  rules:
+    # Only CAPCOM can uplink commands
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/capcom"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/uplink", "/uplink/*"]
+    # DSN signal-router can request downlink
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/signal-router"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/downlink"]
+    # Signal strength is readable by DSN
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/signal-router"]
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/signal/strength"]
+
+---
+# ORION CELL: Guidance-nav maneuver endpoint is critical.
+# Only commands relayed through comms-system (intra-cell) allowed.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: guidance-nav-policy
+  # namespace: <orion-runtime-ns>
+spec:
+  targetRefs:
+    - kind: Service
+      group: ""
+      name: guidance-nav
+  action: ALLOW
+  rules:
+    # Only comms-system can relay maneuver commands (intra-cell)
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/comms-system"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/maneuver"]
+    # Read-only telemetry for comms-system and crew-interface
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/*/sa/comms-system"
+              - "cluster.local/ns/*/sa/crew-interface"
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/position", "/trajectory", "/star-tracker"]
+
+---
+# ORION CELL: Crew vitals are classified data.
+# Only crew-interface and comms-system can read them.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: life-support-policy
+  # namespace: <orion-runtime-ns>
+spec:
+  targetRefs:
+    - kind: Service
+      group: ""
+      name: life-support
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/*/sa/comms-system"
+              - "cluster.local/ns/*/sa/crew-interface"
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/crew/vitals", "/cabin/atmosphere", "/consumables"]
+    # Only crew-interface can adjust cabin
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/crew-interface"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/cabin/adjust"]
+
+---
+# DSN CELL: Signal router accepts telemetry from Orion
+# and forwards to Houston. Only known sources allowed.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: signal-router-policy
+  # namespace: <dsn-runtime-ns>
+spec:
+  targetRefs:
+    - kind: Service
+      group: ""
+      name: signal-router
+  action: ALLOW
+  rules:
+    # Orion comms-system can route signals
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/comms-system"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/route", "/ingest"]
+    # Houston telemetry-monitor can read
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/*/sa/telemetry-monitor"
+              - "cluster.local/ns/*/sa/flight-director"
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/active-link", "/route"]
+    # Antenna stations can trigger handover
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/*/sa/goldstone"
+              - "cluster.local/ns/*/sa/madrid"
+              - "cluster.local/ns/*/sa/canberra"
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/handover"]
+    # Gateway access for dashboard
+    - from:
+        - source:
+            principals: ["cluster.local/ns/openchoreo-data-plane/sa/gateway-default-istio"]
+      to:
+        - operation:
+            methods: ["GET"]
+
+---
+# ESA CELL: Service module data is shared with Houston,
+# but only ESA mission-relay can push telemetry externally.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: esa-mission-relay-policy
+  # namespace: <esa-runtime-ns>
+spec:
+  targetRefs:
+    - kind: Service
+      group: ""
+      name: mission-relay
+  action: ALLOW
+  rules:
+    # Service module monitor can relay data
+    - from:
+        - source:
+            principals: ["cluster.local/ns/*/sa/service-module-monitor"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/relay/telemetry", "/relay/alert"]
+    # Houston can check relay status
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/*/sa/telemetry-monitor"
+              - "cluster.local/ns/*/sa/flight-director"
+      to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/relay/status"]

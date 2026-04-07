@@ -1,0 +1,41 @@
+# Enable Istio ambient mesh on all mission Cell namespaces.
+# Applied AFTER OpenChoreo creates the runtime namespaces.
+#
+# These namespace labels enroll pods into the ztunnel mesh,
+# giving all inter-service traffic automatic mTLS encryption
+# without sidecars.
+#
+# Usage:
+#   Replace HOUSTON_NS, KENNEDY_NS, etc. with the actual
+#   dp-default-<project>-development-<hash> namespace names
+#   created by OpenChoreo.
+#
+# Example:
+#   kubectl label namespace dp-default-houston-development-abc123 \
+#     istio.io/dataplane-mode=ambient
+
+# Also apply the NetworkPolicy for Istio ambient ports to each namespace.
+# Ztunnel uses port 15008 (HBONE) for mTLS tunneling, which must be
+# allowed through OpenChoreo's auto-generated NetworkPolicies.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-istio-ambient
+  # Apply to each mission namespace
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 15008
+          protocol: TCP
+        - port: 15006
+          protocol: TCP
+        - port: 15001
+          protocol: TCP
+        - port: 15053
+          protocol: TCP
+        - port: 15053
+          protocol: UDP

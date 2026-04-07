@@ -1,0 +1,46 @@
+identity: signal-router
+cell: deep-space-network
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: POST
+    path: /route
+    response:
+      status: routed
+      activeStation: "goldstone"
+      signalStrength: "-157.2 dBm"
+      dataRate: "800 kbps"
+      latency: "1.3s"
+
+  - method: GET
+    path: /route
+    response:
+      activeStation: "goldstone"
+      signalStrength: "-157.2 dBm"
+      lockStatus: "ACQUIRED"
+
+  - method: GET
+    path: /active-link
+    response:
+      station: "goldstone"
+      antenna: "DSS-14 (70m)"
+      elevation: "42.7 deg"
+      signalStrength: "-157.2 dBm"
+
+  - method: POST
+    path: /handover
+    response:
+      status: handover-complete
+      from: "goldstone"
+      to: "madrid"
+      reason: "Earth rotation - target below 10 deg elevation"
+      newSignalStrength: "-159.1 dBm"
+
+  - method: POST
+    path: /ingest
+    response:
+      status: received
+      source: "orion/comms-system"
+      dataSize: "2.4 KB"
+      forwarded: "houston/telemetry-monitor"

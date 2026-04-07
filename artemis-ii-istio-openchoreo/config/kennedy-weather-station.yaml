@@ -1,0 +1,32 @@
+identity: weather-station
+cell: kennedy
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /conditions
+    response:
+      location: "LC-39B, Kennedy Space Center"
+      temperature: "26.7C"
+      windSpeed: "8.2 knots"
+      windDirection: "NE"
+      visibility: "10+ miles"
+      precipitation: "none"
+      cloudCeiling: "25,000 ft"
+
+  - method: GET
+    path: /forecast
+    response:
+      nextHours: "clear skies, winds decreasing"
+      probability: "90% favorable"
+
+  - method: GET
+    path: /launch-criteria
+    response:
+      status: GO
+      criteria:
+        winds: { limit: "30 knots", actual: "8.2 knots", status: "GO" }
+        ceiling: { limit: "6,000 ft", actual: "25,000 ft", status: "GO" }
+        precipitation: { limit: "none within 20nm", actual: "clear", status: "GO" }
+        lightning: { limit: "no detection within 10nm", actual: "none", status: "GO" }

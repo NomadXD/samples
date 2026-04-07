@@ -1,0 +1,38 @@
+identity: guidance-nav
+cell: orion
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /position
+    response:
+      latitude: "28.5729 N"
+      longitude: "80.6490 W"
+      altitude: "384,400 km"
+      referenceFrame: "Earth-centered inertial"
+
+  - method: GET
+    path: /trajectory
+    response:
+      phase: "trans-lunar-injection"
+      perigee: "185 km"
+      apogee: "384,400 km"
+      inclination: "28.5 deg"
+      period: "10d 21h 32m"
+
+  - method: POST
+    path: /maneuver
+    response:
+      status: acknowledged
+      type: "course-correction"
+      deltaV: "2.3 m/s"
+      burnDuration: "12.4 s"
+      engine: "OMS"
+
+  - method: GET
+    path: /star-tracker
+    response:
+      status: locked
+      referenceStars: ["Canopus", "Sirius", "Vega"]
+      attitudeError: "0.003 deg"

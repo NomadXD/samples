@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARTEMIS II - Mission Control</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0e17;
+    color: #c0c8d8;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    overflow-x: hidden;
+  }
+
+  .header {
+    background: linear-gradient(180deg, #111827 0%, #0a0e17 100%);
+    border-bottom: 1px solid #1e3a5f;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header h1 { color: #4fc3f7; font-size: 18px; letter-spacing: 3px; }
+  .met { color: #81d4fa; font-size: 16px; font-weight: bold; }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  .status-nominal { background: #1b5e20; color: #69f0ae; }
+  .status-alert { background: #b71c1c; color: #ff8a80; animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .cell-panel {
+    background: #111827;
+    border: 1px solid #1e3a5f;
+    border-radius: 6px;
+    padding: 12px;
+    min-height: 200px;
+  }
+  .cell-panel.highlight { border-color: #4fc3f7; box-shadow: 0 0 10px rgba(79, 195, 247, 0.2); }
+
+  .cell-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1e3a5f;
+  }
+  .cell-name { color: #4fc3f7; font-weight: bold; font-size: 12px; letter-spacing: 2px; }
+  .cell-status { font-size: 11px; }
+  .cell-status.online { color: #69f0ae; }
+  .cell-status.offline { color: #ff5252; }
+
+  .component {
+    padding: 4px 0;
+    font-size: 11px;
+    color: #90a4ae;
+    display: flex;
+    justify-content: space-between;
+  }
+  .component-name { color: #b0bec5; }
+  .component-indicator {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    background: #69f0ae;
+  }
+  .component-indicator.active { background: #ffab00; animation: pulse 0.5s infinite; }
+
+  .actions {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .btn {
+    background: #1a237e;
+    color: #82b1ff;
+    border: 1px solid #283593;
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .btn:hover { background: #283593; border-color: #5c6bc0; }
+  .btn:active { background: #3949ab; }
+  .btn.danger { background: #b71c1c; border-color: #c62828; color: #ff8a80; }
+  .btn.danger:hover { background: #c62828; }
+  .btn.warn { background: #e65100; border-color: #ef6c00; color: #ffcc80; }
+  .btn.warn:hover { background: #ef6c00; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .telemetry-value {
+    color: #69f0ae;
+    font-size: 12px;
+    margin: 2px 0;
+  }
+  .telemetry-label { color: #607d8b; font-size: 10px; letter-spacing: 1px; }
+
+  .trace-panel {
+    margin: 0 12px 12px 12px;
+    background: #0d1117;
+    border: 1px solid #1e3a5f;
+    border-radius: 6px;
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+  }
+  .trace-header {
+    padding: 8px 16px;
+    border-bottom: 1px solid #1e3a5f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .trace-title { color: #4fc3f7; font-size: 12px; letter-spacing: 2px; }
+  .trace-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 16px;
+    scroll-behavior: smooth;
+  }
+  .trace-entry {
+    padding: 4px 0;
+    border-bottom: 1px solid #0d1520;
+    display: grid;
+    grid-template-columns: 70px 1fr 60px 50px;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+    animation: fadeIn 0.3s ease-in;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .trace-time { color: #607d8b; }
+  .trace-route { color: #b0bec5; }
+  .trace-route .src { color: #4fc3f7; }
+  .trace-route .dst { color: #ce93d8; }
+  .trace-route .arrow { color: #455a64; margin: 0 4px; }
+  .trace-route .method { color: #ffab00; margin-right: 4px; font-weight: bold; }
+  .trace-status { font-weight: bold; }
+  .trace-status.ok { color: #69f0ae; }
+  .trace-status.denied { color: #ff5252; }
+  .trace-status.error { color: #ff9800; }
+  .trace-latency { color: #607d8b; text-align: right; }
+  .trace-detail {
+    grid-column: 1 / -1;
+    color: #546e7a;
+    font-size: 10px;
+    padding-left: 78px;
+  }
+  .trace-mtls { color: #69f0ae; }
+  .trace-no-mtls { color: #ff5252; }
+
+  .adversary-panel {
+    margin: 0 12px 12px 12px;
+    background: #1a0000;
+    border: 1px solid #b71c1c;
+    border-radius: 6px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .adversary-label {
+    color: #ff5252;
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+  .adversary-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .trace-body::-webkit-scrollbar { width: 6px; }
+  .trace-body::-webkit-scrollbar-track { background: #0d1117; }
+  .trace-body::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>ARTEMIS II</h1>
+    <span class="status-badge status-nominal" id="missionStatus">ALL SYSTEMS NOMINAL</span>
+  </div>
+  <div class="met">MET <span id="met">00:00:00:00</span></div>
+</div>
+
+<div class="grid">
+  <!-- KENNEDY -->
+  <div class="cell-panel" id="panel-kennedy">
+    <div class="cell-header">
+      <span class="cell-name">KENNEDY</span>
+      <span class="cell-status online" id="status-kennedy">ONLINE</span>
+    </div>
+    <div class="component"><span class="component-name">launch-control</span><span class="component-indicator" id="ind-launch-control"></span></div>
+    <div class="component"><span class="component-name">ground-systems</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">weather-station</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">pad-operations</span><span class="component-indicator"></span></div>
+    <div class="telemetry-label">COUNTDOWN</div>
+    <div class="telemetry-value" id="countdown">T-00:10:00</div>
+    <div class="actions">
+      <button class="btn" onclick="action('launch')">INITIATE LAUNCH</button>
+      <button class="btn" onclick="action('holdCountdown')">HOLD COUNTDOWN</button>
+      <button class="btn" onclick="action('weather')">CHECK WEATHER</button>
+    </div>
+  </div>
+
+  <!-- HOUSTON -->
+  <div class="cell-panel highlight" id="panel-houston">
+    <div class="cell-header">
+      <span class="cell-name">HOUSTON</span>
+      <span class="cell-status online" id="status-houston">ONLINE</span>
+    </div>
+    <div class="component"><span class="component-name">flight-director</span><span class="component-indicator" id="ind-flight-director"></span></div>
+    <div class="component"><span class="component-name">capcom</span><span class="component-indicator" id="ind-capcom"></span></div>
+    <div class="component"><span class="component-name">telemetry-monitor</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">flight-dynamics</span><span class="component-indicator"></span></div>
+    <div class="telemetry-label">MISSION STATUS</div>
+    <div class="telemetry-value" id="missionPhase">PRE-LAUNCH</div>
+    <div class="actions">
+      <button class="btn" onclick="action('sendCommand')">SEND COMMAND TO ORION</button>
+      <button class="btn" onclick="action('requestTelemetry')">REQUEST TELEMETRY</button>
+      <button class="btn" onclick="action('goNoGo')">GO / NO-GO POLL</button>
+      <button class="btn danger" onclick="action('abort')">ABORT MISSION</button>
+    </div>
+  </div>
+
+  <!-- ORION -->
+  <div class="cell-panel" id="panel-orion">
+    <div class="cell-header">
+      <span class="cell-name">ORION</span>
+      <span class="cell-status online" id="status-orion">ONLINE</span>
+    </div>
+    <div class="component"><span class="component-name">guidance-nav</span><span class="component-indicator" id="ind-guidance-nav"></span></div>
+    <div class="component"><span class="component-name">life-support</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">crew-interface</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">comms-system</span><span class="component-indicator" id="ind-comms"></span></div>
+    <div class="telemetry-label">ALTITUDE</div>
+    <div class="telemetry-value" id="altitude">0 km</div>
+    <div class="telemetry-label">VELOCITY</div>
+    <div class="telemetry-value" id="velocity">0 km/s</div>
+    <div class="telemetry-label">CREW VITALS</div>
+    <div class="telemetry-value" id="crewVitals">ALL NOMINAL</div>
+  </div>
+
+  <!-- DSN -->
+  <div class="cell-panel" id="panel-dsn">
+    <div class="cell-header">
+      <span class="cell-name">DEEP SPACE NETWORK</span>
+      <span class="cell-status online" id="status-dsn">ONLINE</span>
+    </div>
+    <div class="component"><span class="component-name">goldstone</span><span class="component-indicator" id="ind-goldstone"></span></div>
+    <div class="component"><span class="component-name">madrid</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">canberra</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">signal-router</span><span class="component-indicator" id="ind-signal-router"></span></div>
+    <div class="telemetry-label">ACTIVE LINK</div>
+    <div class="telemetry-value" id="activeLink">GOLDSTONE</div>
+    <div class="telemetry-label">SIGNAL STRENGTH</div>
+    <div class="telemetry-value" id="signalStrength">-157.2 dBm</div>
+    <div class="actions">
+      <button class="btn" onclick="action('handover')">DSN HANDOVER</button>
+    </div>
+  </div>
+
+  <!-- ESA -->
+  <div class="cell-panel" id="panel-esa">
+    <div class="cell-header">
+      <span class="cell-name">ESA OPS</span>
+      <span class="cell-status online" id="status-esa">ONLINE</span>
+    </div>
+    <div class="component"><span class="component-name">service-module-monitor</span><span class="component-indicator"></span></div>
+    <div class="component"><span class="component-name">mission-relay</span><span class="component-indicator" id="ind-esa-relay"></span></div>
+    <div class="telemetry-label">SERVICE MODULE</div>
+    <div class="telemetry-value" id="propulsion">NOMINAL</div>
+    <div class="telemetry-label">SOLAR ARRAYS</div>
+    <div class="telemetry-value" id="solarArrays">14.2 kW</div>
+    <div class="actions">
+      <button class="btn" onclick="action('esaTelemetry')">ESA TELEMETRY</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADVERSARY -->
+<div class="adversary-panel">
+  <span class="adversary-label">ADVERSARY SIGNAL</span>
+  <div class="adversary-actions">
+    <button class="btn danger" onclick="adversary('abort')">SEND ABORT CMD</button>
+    <button class="btn danger" onclick="adversary('maneuver')">HIJACK NAVIGATION</button>
+    <button class="btn danger" onclick="adversary('crewVitals')">STEAL CREW VITALS</button>
+    <button class="btn danger" onclick="adversary('spoofHouston')">SPOOF HOUSTON ID</button>
+    <button class="btn warn" onclick="adversary('solarFlare')">INJECT SOLAR FLARE</button>
+  </div>
+</div>
+
+<!-- SIGNAL TRACE -->
+<div class="trace-panel">
+  <div class="trace-header">
+    <span class="trace-title">SIGNAL TRACE</span>
+    <button class="btn" onclick="clearTrace()" style="padding: 2px 8px; font-size: 10px;">CLEAR</button>
+  </div>
+  <div class="trace-body" id="traceBody"></div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+const traceBody = document.getElementById('traceBody');
+let metSeconds = 0;
+let missionStarted = false;
+
+// Mission Elapsed Time counter
+setInterval(() => {
+  if (!missionStarted) return;
+  metSeconds++;
+  const h = Math.floor(metSeconds / 3600).toString().padStart(2, '0');
+  const m = Math.floor((metSeconds % 3600) / 60).toString().padStart(2, '0');
+  const s = (metSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('met').textContent = `00:${h}:${m}:${s}`;
+}, 1000);
+
+// SSE connection for real-time trace
+function connectSSE() {
+  const evtSource = new EventSource(API_BASE + '/events');
+  evtSource.onmessage = (e) => {
+    const evt = JSON.parse(e.data);
+    addTraceEntry(evt);
+  };
+  evtSource.onerror = () => {
+    setTimeout(connectSSE, 3000);
+  };
+}
+connectSSE();
+
+function addTraceEntry(evt) {
+  const statusClass = evt.status >= 200 && evt.status < 300 ? 'ok' : evt.status >= 400 ? 'denied' : 'error';
+  const statusText = evt.status >= 200 && evt.status < 300 ? `${evt.status} OK` :
+                     evt.status === 403 ? '403 DENIED' :
+                     evt.status === 0 ? 'CONN ERR' : `${evt.status} ERR`;
+  const mtlsHtml = evt.mtls ? '<span class="trace-mtls">mTLS</span>' : '<span class="trace-no-mtls">NO-TLS</span>';
+
+  const entry = document.createElement('div');
+  entry.innerHTML = `
+    <div class="trace-entry">
+      <span class="trace-time">${evt.timestamp}</span>
+      <span class="trace-route">
+        <span class="method">${evt.method}</span>
+        <span class="src">${evt.source}</span>
+        <span class="arrow">&rarr;</span>
+        <span class="dst">${evt.target}</span>
+      </span>
+      <span class="trace-status ${statusClass}">${statusText}</span>
+      <span class="trace-latency">${evt.latency}</span>
+    </div>
+    ${evt.error ? `<div class="trace-detail">error: ${evt.error}</div>` : ''}
+    <div class="trace-detail">${mtlsHtml} | path: ${evt.path}</div>
+  `;
+  traceBody.appendChild(entry);
+  traceBody.scrollTop = traceBody.scrollHeight;
+
+  // Flash the relevant indicator
+  flashIndicator(evt.source, evt.target);
+}
+
+function addLocalTrace(source, target, method, path, status, latency, error) {
+  addTraceEntry({
+    timestamp: new Date().toISOString().substr(11, 8),
+    source, target, method, path, status,
+    latency: latency || '0ms',
+    mtls: status >= 200 && status < 300,
+    error: error || ''
+  });
+}
+
+function flashIndicator(source, target) {
+  // Simple flash effect on component indicators
+  document.querySelectorAll('.component-indicator').forEach(el => {
+    const name = el.id?.replace('ind-', '');
+    if (name && (source.includes(name) || target.includes(name))) {
+      el.classList.add('active');
+      setTimeout(() => el.classList.remove('active'), 800);
+    }
+  });
+}
+
+function clearTrace() {
+  traceBody.innerHTML = '';
+}
+
+async function apiCall(method, path) {
+  try {
+    const resp = await fetch(API_BASE + path, { method });
+    const data = await resp.json();
+    return { status: resp.status, data };
+  } catch (e) {
+    return { status: 0, error: e.message };
+  }
+}
+
+async function action(name) {
+  switch (name) {
+    case 'launch':
+      missionStarted = true;
+      document.getElementById('missionPhase').textContent = 'LAUNCH SEQUENCE';
+      document.getElementById('countdown').textContent = 'T-00:00:10';
+      addLocalTrace('houston/flight-director', 'kennedy/launch-control', 'POST', '/countdown/start', 200, '12ms');
+      await apiCall('POST', '/decision/go-nogo');
+
+      // Countdown animation
+      let count = 10;
+      const countdownInterval = setInterval(() => {
+        count--;
+        document.getElementById('countdown').textContent = count > 0 ? `T-00:00:${count.toString().padStart(2, '0')}` : 'T+00:00:00';
+        if (count <= 0) {
+          clearInterval(countdownInterval);
+          document.getElementById('missionPhase').textContent = 'ASCENT';
+          addLocalTrace('kennedy/launch-control', 'houston/flight-director', 'POST', '/handoff', 200, '8ms');
+          addLocalTrace('houston/flight-director', 'houston/capcom', 'POST', '/uplink/voice', 200, '1ms');
+          simulateAscent();
+        }
+      }, 1000);
+      break;
+
+    case 'holdCountdown':
+      document.getElementById('missionPhase').textContent = 'HOLD';
+      addLocalTrace('houston/flight-director', 'kennedy/launch-control', 'POST', '/countdown/hold', 200, '5ms');
+      break;
+
+    case 'weather':
+      addLocalTrace('houston/flight-director', 'kennedy/weather-station', 'GET', '/conditions', 200, '22ms');
+      addLocalTrace('kennedy/weather-station', 'houston/flight-director', 'GET', '/launch-criteria', 200, '3ms');
+      break;
+
+    case 'sendCommand':
+      const cmdResult = await apiCall('POST', '/uplink/command');
+      break;
+
+    case 'requestTelemetry':
+      const telResult = await apiCall('GET', '/downlink/telemetry');
+      if (telResult.data) updateTelemetry(telResult.data);
+      break;
+
+    case 'goNoGo':
+      addLocalTrace('houston/flight-director', 'kennedy/launch-control', 'GET', '/countdown/status', 200, '15ms');
+      addLocalTrace('houston/flight-director', 'kennedy/weather-station', 'GET', '/launch-criteria', 200, '18ms');
+      addLocalTrace('houston/flight-director', 'esa-ops/service-module-monitor', 'GET', '/propulsion/status', 200, '45ms');
+      addLocalTrace('houston/flight-director', 'dsn/signal-router', 'GET', '/active-link', 200, '12ms');
+      document.getElementById('missionStatus').textContent = 'GO FOR LAUNCH';
+      document.getElementById('missionStatus').className = 'status-badge status-nominal';
+      break;
+
+    case 'abort':
+      document.getElementById('missionPhase').textContent = 'ABORT';
+      document.getElementById('missionStatus').textContent = 'ABORT ABORT ABORT';
+      document.getElementById('missionStatus').className = 'status-badge status-alert';
+      await apiCall('POST', '/decision/abort');
+      break;
+
+    case 'handover':
+      const stations = ['GOLDSTONE', 'MADRID', 'CANBERRA'];
+      const current = document.getElementById('activeLink').textContent;
+      const next = stations[(stations.indexOf(current) + 1) % stations.length];
+      addLocalTrace('dsn/signal-router', `dsn/${next.toLowerCase()}`, 'POST', '/handover', 200, '120ms');
+      document.getElementById('activeLink').textContent = next;
+      break;
+
+    case 'esaTelemetry':
+      addLocalTrace('esa-ops/service-module-monitor', 'orion/comms-system', 'GET', '/propulsion/status', 200, '89ms');
+      addLocalTrace('esa-ops/mission-relay', 'houston/telemetry-monitor', 'POST', '/relay/telemetry', 200, '34ms');
+      break;
+  }
+}
+
+async function adversary(type) {
+  const panel = document.querySelector('.adversary-panel');
+  panel.style.boxShadow = '0 0 20px rgba(255, 0, 0, 0.5)';
+  setTimeout(() => panel.style.boxShadow = '', 1000);
+
+  switch (type) {
+    case 'abort':
+      addLocalTrace('ADVERSARY', 'houston/flight-director', 'POST', '/decision/abort', 403, '2ms', 'RBAC: identity not in allowlist');
+      break;
+    case 'maneuver':
+      addLocalTrace('ADVERSARY', 'orion/guidance-nav', 'POST', '/maneuver', 403, '1ms', 'RBAC: source principal denied');
+      break;
+    case 'crewVitals':
+      addLocalTrace('ADVERSARY', 'orion/life-support', 'GET', '/crew/vitals', 403, '1ms', 'RBAC: classified data - unauthorized identity');
+      break;
+    case 'spoofHouston':
+      addLocalTrace('ADVERSARY (spoofed: houston/capcom)', 'orion/comms-system', 'POST', '/uplink/command', 403, '1ms', 'SPIFFE identity mismatch: expected spiffe://cluster.local/ns/houston/sa/capcom');
+      break;
+    case 'solarFlare':
+      document.getElementById('missionStatus').textContent = 'SOLAR EVENT - SIGNAL DEGRADED';
+      document.getElementById('missionStatus').className = 'status-badge status-alert';
+      document.getElementById('signalStrength').textContent = '-189.7 dBm';
+      document.getElementById('signalStrength').style.color = '#ff5252';
+      addLocalTrace('SOLAR FLARE', 'dsn/goldstone', 'N/A', '/interference', 0, '5000ms', 'Signal degradation: particle event');
+      addLocalTrace('dsn/signal-router', 'dsn/madrid', 'POST', '/handover', 200, '3200ms', 'Emergency handover - high latency');
+      setTimeout(() => {
+        document.getElementById('missionStatus').textContent = 'SIGNAL RECOVERED';
+        document.getElementById('missionStatus').className = 'status-badge status-nominal';
+        document.getElementById('signalStrength').textContent = '-162.1 dBm';
+        document.getElementById('signalStrength').style.color = '#69f0ae';
+        addLocalTrace('dsn/madrid', 'houston/telemetry-monitor', 'POST', '/ingest', 200, '45ms', 'Link reacquired via Madrid');
+      }, 6000);
+      break;
+  }
+}
+
+function simulateAscent() {
+  let alt = 0;
+  let vel = 0;
+  const ascentInterval = setInterval(() => {
+    alt += Math.random() * 15 + 5;
+    vel += Math.random() * 0.3 + 0.1;
+    document.getElementById('altitude').textContent = `${alt.toFixed(1)} km`;
+    document.getElementById('velocity').textContent = `${vel.toFixed(2)} km/s`;
+    document.getElementById('signalStrength').textContent = `${(-157 - alt * 0.01).toFixed(1)} dBm`;
+
+    if (alt > 200) {
+      document.getElementById('missionPhase').textContent = 'ORBIT INSERTION';
+    }
+    if (alt > 500) {
+      document.getElementById('missionPhase').textContent = 'TRANS-LUNAR INJECTION';
+    }
+    if (alt > 1000) {
+      clearInterval(ascentInterval);
+      document.getElementById('missionPhase').textContent = 'LUNAR TRANSIT';
+      addLocalTrace('orion/comms-system', 'dsn/goldstone', 'POST', '/downlink', 200, '1200ms');
+      addLocalTrace('dsn/signal-router', 'houston/telemetry-monitor', 'POST', '/ingest', 200, '15ms');
+    }
+  }, 2000);
+}
+
+function updateTelemetry(data) {
+  if (data.altitude) document.getElementById('altitude').textContent = data.altitude;
+  if (data.velocity) document.getElementById('velocity').textContent = data.velocity;
+  if (data.crewVitals) document.getElementById('crewVitals').textContent = data.crewVitals;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+identity: pad-operations
+cell: kennedy
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /pad/status
+    response:
+      pad: "LC-39B"
+      status: "launch-ready"
+      crewAccessArm: retracted
+      soundSuppression: armed
+      flameTrench: clear
+      perimeter: secured
+
+  - method: POST
+    path: /pad/clear
+    response:
+      status: cleared
+      message: "All personnel evacuated from LC-39B perimeter"
+
+  - method: GET
+    path: /pad/cameras
+    response:
+      cameras: 22
+      streaming: true
+      feeds: ["pad-north", "pad-south", "flame-trench", "crew-access", "tower-top"]

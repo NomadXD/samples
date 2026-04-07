@@ -1,0 +1,37 @@
+identity: service-module-monitor
+cell: esa-ops
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /propulsion/status
+    response:
+      engine: "AJ10-190 (OMS-E)"
+      status: nominal
+      fuelRemaining: "8,600 kg MMH"
+      oxidizerRemaining: "14,200 kg N2O4"
+      thrustCapability: "26.7 kN"
+
+  - method: GET
+    path: /power/solar-arrays
+    response:
+      arrays: 4
+      totalOutput: "14.2 kW"
+      status: "deployed and tracking"
+      degradation: "0.2%"
+
+  - method: GET
+    path: /consumables
+    response:
+      water: "240 L"
+      nitrogen: "92%"
+      coolant: "nominal"
+
+  - method: GET
+    path: /thermal
+    response:
+      radiatorStatus: "nominal"
+      cabinTemp: "22.1C"
+      serviceModuleTemp: "18.5C"
+      solarArrayTemp: "65.2C"

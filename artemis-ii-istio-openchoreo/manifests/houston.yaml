@@ -1,0 +1,137 @@
+# Houston Mission Control - 4 components
+---
+# Flight Director - the authority, serves the dashboard UI
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: flight-director
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: flight-director-workload
+  namespace: default
+spec:
+  owner:
+    componentName: flight-director
+    projectName: houston
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [external]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/houston-flight-director.yaml"
+---
+# CAPCOM - capsule communicator, single point of contact with crew
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: capcom
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: capcom-workload
+  namespace: default
+spec:
+  owner:
+    componentName: capcom
+    projectName: houston
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/houston-capcom.yaml"
+---
+# Telemetry Monitor - ingests and processes spacecraft telemetry
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: telemetry-monitor
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: telemetry-monitor-workload
+  namespace: default
+spec:
+  owner:
+    componentName: telemetry-monitor
+    projectName: houston
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [namespace]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/houston-telemetry-monitor.yaml"
+---
+# Flight Dynamics - trajectory computation
+apiVersion: openchoreo.dev/v1alpha1
+kind: Component
+metadata:
+  name: flight-dynamics
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+  autoDeploy: true
+  componentType:
+    kind: ClusterComponentType
+    name: deployment/service
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: Workload
+metadata:
+  name: flight-dynamics-workload
+  namespace: default
+spec:
+  owner:
+    componentName: flight-dynamics
+    projectName: houston
+  endpoints:
+    http:
+      type: HTTP
+      port: 8080
+      visibility: [project]
+  container:
+    image: "artemis-demo:latest"
+    env:
+      - key: CONFIG_PATH
+        value: "config/houston-flight-dynamics.yaml"

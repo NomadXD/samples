@@ -1,0 +1,31 @@
+identity: flight-dynamics
+cell: houston
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /trajectory/current
+    response:
+      phase: "trans-lunar-injection"
+      altitude: "384,400 km"
+      velocity: "7.81 km/s"
+      inclination: "28.5 deg"
+      status: nominal
+
+  - method: POST
+    path: /trajectory/correction
+    response:
+      status: computed
+      deltaV: "2.3 m/s"
+      burnDuration: "12.4 s"
+      window: "T+4d 02:15:00"
+      message: "Correction maneuver computed, awaiting flight director approval"
+
+  - method: GET
+    path: /orbital-mechanics
+    response:
+      periapsis: "185 km"
+      apoapsis: "384,400 km"
+      period: "10d 21h 32m"
+      lunarArrival: "T+4d 06:33:00"

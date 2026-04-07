@@ -1,0 +1,29 @@
+identity: canberra
+cell: deep-space-network
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /antenna/status
+    response:
+      station: "Canberra Deep Space Communication Complex"
+      location: "Tidbinbilla, Australia"
+      antenna: "DSS-43 (70m)"
+      status: standby
+      tracking: "awaiting handover"
+
+  - method: POST
+    path: /track
+    response:
+      status: tracking
+      target: "Artemis II"
+      signalAcquired: true
+      strength: "-160.3 dBm"
+
+  - method: GET
+    path: /signal
+    response:
+      strength: "-160.3 dBm"
+      frequency: "2287.5 MHz"
+      band: "S-band"

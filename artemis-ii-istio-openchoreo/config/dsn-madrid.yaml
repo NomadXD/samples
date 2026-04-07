@@ -1,0 +1,29 @@
+identity: madrid
+cell: deep-space-network
+port: 8080
+serveUI: false
+
+endpoints:
+  - method: GET
+    path: /antenna/status
+    response:
+      station: "Madrid Deep Space Communication Complex"
+      location: "Robledo de Chavela, Spain"
+      antenna: "DSS-63 (70m)"
+      status: standby
+      tracking: "awaiting handover"
+
+  - method: POST
+    path: /track
+    response:
+      status: tracking
+      target: "Artemis II"
+      signalAcquired: true
+      strength: "-159.1 dBm"
+
+  - method: GET
+    path: /signal
+    response:
+      strength: "-159.1 dBm"
+      frequency: "2287.5 MHz"
+      band: "S-band"
