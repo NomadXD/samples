@@ -1,41 +1,189 @@
-# The Adversary - a rogue pod NOT managed by OpenChoreo.
-# Represents a foreign signal / compromised container attempting
-# to send unauthorized commands to the mission.
+# The Adversary - rogue pods NOT managed by OpenChoreo.
 #
-# This pod has NO OpenChoreo project, no declared dependencies,
-# and an unrecognized service account identity.
-# It will be blocked by:
-#   1. OpenChoreo Cell NetworkPolicies (L4)
-#   2. Istio ambient mTLS (unrecognized identity)
-#   3. Istio waypoint AuthorizationPolicy (L7 RBAC)
+# Simulates compromised containers inside Cell namespaces.
+# Each runs the artemis-demo binary with a /proxy endpoint that
+# the dashboard uses to make real attack requests against services.
+#
+# Uses a dedicated `adversary` ServiceAccount so Istio's waypoint
+# can identify and block it via DENY AuthorizationPolicies, while
+# legitimate components (using the `default` SA) remain allowed.
+#
+# Without Istio security: adversary /proxy calls succeed (200 OK)
+# With Istio security:    adversary /proxy calls are denied (403)
+#
+# Usage:
+#   Replace ORION_NS_PLACEHOLDER and HOUSTON_NS_PLACEHOLDER with
+#   the actual runtime namespace names before applying:
+#
+#   cat manifests/adversary.yaml | \
+#     sed "s/ORION_NS_PLACEHOLDER/$ORION_NS/g" | \
+#     sed "s/HOUSTON_NS_PLACEHOLDER/$HOUSTON_NS/g" | \
+#     kubectl apply -f -
+
 ---
+# ============================================================
+# Adversary in Orion Cell (attacks: guidance-nav, life-support, comms)
+# ============================================================
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: adversary
-  namespace: default
+  namespace: ORION_NS_PLACEHOLDER
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: adversary
-  namespace: default
+  name: adversary-proxy
+  namespace: ORION_NS_PLACEHOLDER
   labels:
-    app: adversary
-    threat: "foreign-signal"
+    app: adversary-proxy
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: adversary
+      app: adversary-proxy
   template:
     metadata:
       labels:
-        app: adversary
-        threat: "foreign-signal"
+        app: adversary-proxy
     spec:
       serviceAccountName: adversary
       containers:
-        - name: adversary
-          image: curlimages/curl:latest
-          command: ["sleep", "infinity"]
+        - name: proxy
+          image: artemis-demo:latest
+          imagePullPolicy: Never
+          env:
+            - name: CONFIG_PATH
+              value: config/adversary-proxy.yaml
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adversary-proxy
+  namespace: ORION_NS_PLACEHOLDER
+spec:
+  selector:
+    app: adversary-proxy
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# HTTPRoute: browser reaches adversary via /adversary/* path on the gateway
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: adversary-proxy-route
+  namespace: ORION_NS_PLACEHOLDER
+spec:
+  parentRefs:
+    - name: gateway-default
+      namespace: openchoreo-data-plane
+  hostnames:
+    - "development-default.openchoreoapis.localhost"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /adversary
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: adversary-proxy
+          port: 8080
+
+---
+# ============================================================
+# Adversary in Houston Cell (attacks: flight-director abort)
+# ============================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: adversary
+  namespace: HOUSTON_NS_PLACEHOLDER
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adversary-proxy
+  namespace: HOUSTON_NS_PLACEHOLDER
+  labels:
+    app: adversary-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adversary-proxy
+  template:
+    metadata:
+      labels:
+        app: adversary-proxy
+    spec:
+      serviceAccountName: adversary
+      containers:
+        - name: proxy
+          image: artemis-demo:latest
+          imagePullPolicy: Never
+          env:
+            - name: CONFIG_PATH
+              value: config/adversary-proxy.yaml
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adversary-proxy-houston
+  namespace: HOUSTON_NS_PLACEHOLDER
+spec:
+  selector:
+    app: adversary-proxy
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# HTTPRoute: browser reaches Houston adversary via /adversary-houston/* path
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: adversary-proxy-houston-route
+  namespace: HOUSTON_NS_PLACEHOLDER
+spec:
+  parentRefs:
+    - name: gateway-default
+      namespace: openchoreo-data-plane
+  hostnames:
+    - "development-default.openchoreoapis.localhost"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /adversary-houston
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: adversary-proxy-houston
+          port: 8080

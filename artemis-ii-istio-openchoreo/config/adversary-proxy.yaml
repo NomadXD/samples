@@ -1,0 +1,6 @@
+identity: adversary-signal
+cell: adversary
+port: 8080
+serveUI: false
+
+endpoints: []

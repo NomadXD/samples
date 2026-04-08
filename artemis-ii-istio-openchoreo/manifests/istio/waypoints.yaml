@@ -1,21 +1,22 @@
 # Waypoint proxies for L7 policy enforcement.
-# Deploy one waypoint per mission Cell namespace to enable
+#
+# Deploy one waypoint per Cell namespace to enable
 # AuthorizationPolicy, fault injection, and L7 telemetry.
 #
-# Usage:
-#   istioctl waypoint apply -n <namespace> --name mission-waypoint
+# Waypoints are best deployed via istioctl which handles both
+# the Gateway resource and namespace enrollment label:
 #
-# Or declaratively:
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: mission-waypoint
-  labels:
-    istio.io/waypoint-for: service
-spec:
-  gatewayClassName: istio-waypoint
-  listeners:
-    - name: mesh
-      port: 15008
-      protocol: HBONE
+#   istioctl waypoint apply -n <namespace> --enroll-namespace
+#
+# This creates a waypoint Gateway and labels the namespace with
+# istio.io/use-waypoint so all traffic in the namespace flows
+# through the waypoint for L7 policy evaluation.
+#
+# Deploy on the key cells that need L7 authorization:
+#
+#   istioctl waypoint apply -n HOUSTON_NS --enroll-namespace
+#   istioctl waypoint apply -n ORION_NS --enroll-namespace
+#   istioctl waypoint apply -n DSN_NS --enroll-namespace
+#
+# The waypoint uses the istio-waypoint GatewayClass and listens
+# on port 15008 (HBONE) to receive traffic from ztunnel.

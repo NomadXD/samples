@@ -861,37 +861,73 @@ async function action(name) {
   }
 }
 
+// Adversary proxy base URLs (routed through the Istio gateway)
+const ADVERSARY_ORION = window.location.origin.replace('/flight-director-http', '') + '/adversary/proxy';
+const ADVERSARY_HOUSTON = window.location.origin.replace('/flight-director-http', '') + '/adversary-houston/proxy';
+
+// Internal service URLs (as seen from inside the cluster)
+const TARGETS = {
+  abort:       { url: 'http://flight-director:8080/decision/abort', method: 'POST', label: 'houston/flight-director', proxy: ADVERSARY_HOUSTON },
+  maneuver:    { url: 'http://guidance-nav:8080/maneuver', method: 'POST', label: 'orion/guidance-nav', proxy: ADVERSARY_ORION },
+  crewVitals:  { url: 'http://life-support:8080/crew/vitals', method: 'GET', label: 'orion/life-support', proxy: ADVERSARY_ORION },
+  spoofHouston:{ url: 'http://comms-system:8080/uplink', method: 'POST', label: 'orion/comms-system', proxy: ADVERSARY_ORION },
+};
+
 async function adversary(type) {
-  document.querySelector('.adversary-panel').style.boxShadow = '0 0 20px rgba(255,0,0,0.5)';
-  setTimeout(() => document.querySelector('.adversary-panel').style.boxShadow = '', 1000);
-  switch (type) {
-    case 'abort':
-      addLocalTrace('ADVERSARY', 'houston/flight-director', 'POST', '/decision/abort', 403, '2ms', 'RBAC: identity not in allowlist');
-      break;
-    case 'maneuver':
-      addLocalTrace('ADVERSARY', 'orion/guidance-nav', 'POST', '/maneuver', 403, '1ms', 'RBAC: source principal denied');
-      break;
-    case 'crewVitals':
-      addLocalTrace('ADVERSARY', 'orion/life-support', 'GET', '/crew/vitals', 403, '1ms', 'RBAC: classified - unauthorized identity');
-      break;
-    case 'spoofHouston':
-      addLocalTrace('ADVERSARY [spoofed: capcom]', 'orion/comms-system', 'POST', '/uplink/command', 403, '1ms', 'SPIFFE mismatch: expected spiffe://cluster.local/ns/houston/sa/capcom');
-      break;
-    case 'solarFlare':
-      document.getElementById('missionStatus').textContent = 'SOLAR EVENT';
+  const panel = document.querySelector('.adversary-panel');
+  panel.style.boxShadow = '0 0 20px rgba(255,0,0,0.5)';
+  setTimeout(() => panel.style.boxShadow = '', 1500);
+
+  if (type === 'solarFlare') {
+    document.getElementById('missionStatus').textContent = 'SOLAR EVENT';
+    document.getElementById('missionStatus').className = 'status-badge status-alert';
+    document.getElementById('signalStrength').textContent = '-189.7 dBm';
+    document.getElementById('signalStrength').style.color = '#ff5252';
+    addLocalTrace('SOLAR FLARE', 'dsn/goldstone', 'N/A', '/interference', 0, '5000ms', 'Particle event - signal degradation');
+    addLocalTrace('dsn/signal-router', 'dsn/madrid', 'POST', '/handover', 200, '3200ms', 'Emergency handover');
+    setTimeout(() => {
+      document.getElementById('missionStatus').textContent = 'SIGNAL RECOVERED';
+      document.getElementById('missionStatus').className = 'status-badge status-nominal';
+      document.getElementById('signalStrength').textContent = '-162.1 dBm';
+      document.getElementById('signalStrength').style.color = '#69f0ae';
+      addLocalTrace('dsn/madrid', 'houston/telemetry-monitor', 'POST', '/ingest', 200, '45ms', 'Link reacquired via Madrid');
+    }, 6000);
+    return;
+  }
+
+  const target = TARGETS[type];
+  if (!target) return;
+
+  const proxyUrl = `${target.proxy}?url=${encodeURIComponent(target.url)}&method=${target.method}&label=${encodeURIComponent(target.label)}`;
+
+  try {
+    const resp = await fetch(proxyUrl);
+    const data = await resp.json();
+    const status = data.status || 0;
+    const isOk = status >= 200 && status < 300;
+    const errorMsg = data.error || (isOk ? '' : `RBAC: access denied (SPIFFE: adversary SA)`);
+
+    addLocalTrace(
+      'ADVERSARY',
+      target.label,
+      target.method,
+      target.url,
+      status,
+      data.latency || '0ms',
+      errorMsg
+    );
+
+    // If attack succeeded, flash warning
+    if (isOk) {
+      document.getElementById('missionStatus').textContent = 'BREACH DETECTED';
       document.getElementById('missionStatus').className = 'status-badge status-alert';
-      document.getElementById('signalStrength').textContent = '-189.7 dBm';
-      document.getElementById('signalStrength').style.color = '#ff5252';
-      addLocalTrace('SOLAR FLARE', 'dsn/goldstone', 'N/A', '/interference', 0, '5000ms', 'Particle event - signal degradation');
-      addLocalTrace('dsn/signal-router', 'dsn/madrid', 'POST', '/handover', 200, '3200ms', 'Emergency handover');
       setTimeout(() => {
-        document.getElementById('missionStatus').textContent = 'SIGNAL RECOVERED';
+        document.getElementById('missionStatus').textContent = 'MISSION ACTIVE';
         document.getElementById('missionStatus').className = 'status-badge status-nominal';
-        document.getElementById('signalStrength').textContent = '-162.1 dBm';
-        document.getElementById('signalStrength').style.color = '#69f0ae';
-        addLocalTrace('dsn/madrid', 'houston/telemetry-monitor', 'POST', '/ingest', 200, '45ms', 'Link reacquired via Madrid');
-      }, 6000);
-      break;
+      }, 3000);
+    }
+  } catch (e) {
+    addLocalTrace('ADVERSARY', target.label, target.method, target.url, 0, '0ms', 'Connection failed: ' + e.message);
   }
 }
 

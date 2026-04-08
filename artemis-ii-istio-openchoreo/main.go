@@ -197,6 +197,69 @@ func makeHandler(ep Endpoint) http.HandlerFunc {
 	}
 }
 
+// Proxy endpoint: forwards requests to internal services and returns the result.
+// Used by the adversary instance to attempt attacks on other services.
+// GET/POST /proxy?url=<target>&method=<GET|POST>&label=<display-name>
+func proxyHandler(w http.ResponseWriter, r *http.Request) {
+	targetURL := r.URL.Query().Get("url")
+	method := r.URL.Query().Get("method")
+	label := r.URL.Query().Get("label")
+	if targetURL == "" || method == "" {
+		http.Error(w, `{"error":"missing url or method param"}`, http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	start := time.Now()
+	req, err := http.NewRequest(method, targetURL, nil)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]any{
+			"source": config.Cell + "/" + config.Identity, "target": label,
+			"status": 0, "error": err.Error(), "latency": "0ms",
+		})
+		return
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	latency := time.Since(start).Round(time.Millisecond)
+
+	if err != nil {
+		result := map[string]any{
+			"source": config.Cell + "/" + config.Identity, "target": label,
+			"method": method, "path": targetURL,
+			"status": 0, "error": err.Error(), "latency": latency.String(),
+		}
+		json.NewEncoder(w).Encode(result)
+		return
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+
+	result := map[string]any{
+		"source":  config.Cell + "/" + config.Identity,
+		"target":  label,
+		"method":  method,
+		"path":    targetURL,
+		"status":  resp.StatusCode,
+		"latency": latency.String(),
+	}
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		var parsed any
+		if json.Unmarshal(body, &parsed) == nil {
+			result["body"] = parsed
+		} else {
+			result["body"] = truncate(string(body), 200)
+		}
+	} else {
+		result["error"] = truncate(string(body), 200)
+	}
+	json.NewEncoder(w).Encode(result)
+}
+
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
@@ -257,6 +320,9 @@ func main() {
 
 	// SSE endpoint for real-time trace
 	mux.HandleFunc("/events", sseHandler)
+
+	// Proxy endpoint for adversary simulation
+	mux.HandleFunc("/proxy", proxyHandler)
 
 	// Group endpoints by path to avoid duplicate registration
 	pathHandlers := make(map[string]map[string]Endpoint)
