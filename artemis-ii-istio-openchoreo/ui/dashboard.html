@@ -4,106 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ARTEMIS II - Mission Control</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: #0a0e17;
     color: #c0c8d8;
     font-family: 'Courier New', monospace;
-    font-size: 13px;
-    overflow-x: hidden;
+    font-size: 12px;
+    overflow: hidden;
+    height: 100vh;
   }
 
+  /* HEADER */
   .header {
     background: linear-gradient(180deg, #111827 0%, #0a0e17 100%);
     border-bottom: 1px solid #1e3a5f;
-    padding: 12px 24px;
+    padding: 8px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 40px;
   }
-  .header-left { display: flex; align-items: center; gap: 16px; }
-  .header h1 { color: #4fc3f7; font-size: 18px; letter-spacing: 3px; }
-  .met { color: #81d4fa; font-size: 16px; font-weight: bold; }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header h1 { color: #4fc3f7; font-size: 16px; letter-spacing: 3px; }
+  .met { color: #81d4fa; font-size: 15px; font-weight: bold; }
   .status-badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 1px;
+    display: inline-block; padding: 2px 10px; border-radius: 3px;
+    font-size: 10px; font-weight: bold; letter-spacing: 1px;
   }
   .status-nominal { background: #1b5e20; color: #69f0ae; }
   .status-alert { background: #b71c1c; color: #ff8a80; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-
-  .grid {
+  /* MAIN LAYOUT */
+  .main {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    padding: 12px;
+    grid-template-columns: 220px 1fr 300px;
+    height: calc(100vh - 40px);
   }
 
+  /* LEFT SIDEBAR - Cells */
+  .sidebar-left {
+    border-right: 1px solid #1e3a5f;
+    overflow-y: auto;
+    padding: 6px;
+  }
   .cell-panel {
     background: #111827;
     border: 1px solid #1e3a5f;
-    border-radius: 6px;
-    padding: 12px;
-    min-height: 200px;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 4px;
   }
-  .cell-panel.highlight { border-color: #4fc3f7; box-shadow: 0 0 10px rgba(79, 195, 247, 0.2); }
-
+  .cell-panel.highlight { border-color: #4fc3f7; }
   .cell-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #1e3a5f;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #1e3a5f;
   }
-  .cell-name { color: #4fc3f7; font-weight: bold; font-size: 12px; letter-spacing: 2px; }
-  .cell-status { font-size: 11px; }
+  .cell-name { color: #4fc3f7; font-weight: bold; font-size: 10px; letter-spacing: 1.5px; }
+  .cell-status { font-size: 9px; }
   .cell-status.online { color: #69f0ae; }
-  .cell-status.offline { color: #ff5252; }
-
-  .component {
-    padding: 4px 0;
-    font-size: 11px;
-    color: #90a4ae;
-    display: flex;
-    justify-content: space-between;
-  }
-  .component-name { color: #b0bec5; }
-  .component-indicator {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    background: #69f0ae;
-  }
+  .component { padding: 1px 0; font-size: 10px; color: #90a4ae; display: flex; justify-content: space-between; }
+  .component-name { color: #b0bec5; font-size: 10px; }
+  .component-indicator { width: 6px; height: 6px; border-radius: 50%; display: inline-block; background: #69f0ae; }
   .component-indicator.active { background: #ffab00; animation: pulse 0.5s infinite; }
-
-  .actions {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+  .telemetry-label { color: #607d8b; font-size: 9px; letter-spacing: 1px; margin-top: 3px; }
+  .telemetry-value { color: #69f0ae; font-size: 11px; margin: 1px 0; }
+  .actions { margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
   .btn {
-    background: #1a237e;
-    color: #82b1ff;
-    border: 1px solid #283593;
-    padding: 6px 12px;
-    font-family: inherit;
-    font-size: 11px;
-    cursor: pointer;
-    border-radius: 3px;
-    letter-spacing: 1px;
-    transition: all 0.2s;
-    text-align: left;
+    background: #1a237e; color: #82b1ff; border: 1px solid #283593;
+    padding: 4px 8px; font-family: inherit; font-size: 10px;
+    cursor: pointer; border-radius: 2px; letter-spacing: 0.5px;
+    transition: all 0.2s; text-align: left;
   }
   .btn:hover { background: #283593; border-color: #5c6bc0; }
   .btn:active { background: #3949ab; }
@@ -111,94 +84,133 @@
   .btn.danger:hover { background: #c62828; }
   .btn.warn { background: #e65100; border-color: #ef6c00; color: #ffcc80; }
   .btn.warn:hover { background: #ef6c00; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .telemetry-value {
-    color: #69f0ae;
-    font-size: 12px;
-    margin: 2px 0;
+  /* CENTER - 3D Visualization */
+  .viz-center {
+    position: relative;
+    overflow: hidden;
+    background: #000;
   }
-  .telemetry-label { color: #607d8b; font-size: 10px; letter-spacing: 1px; }
+  #rocketCanvas { display: block; width: 100%; height: 100%; }
 
-  .trace-panel {
-    margin: 0 12px 12px 12px;
-    background: #0d1117;
+  /* Rocket phase overlay */
+  .phase-overlay {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .phase-name {
+    color: #4fc3f7;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
+  }
+  .phase-detail {
+    color: #81d4fa;
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  /* Telemetry HUD overlay */
+  .hud-overlay {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .hud-group {
+    background: rgba(10, 14, 23, 0.85);
     border: 1px solid #1e3a5f;
-    border-radius: 6px;
-    height: 320px;
+    border-radius: 4px;
+    padding: 8px 12px;
+  }
+  .hud-label { color: #607d8b; font-size: 9px; letter-spacing: 1px; }
+  .hud-value { color: #69f0ae; font-size: 14px; font-weight: bold; }
+  .hud-value.alert { color: #ff5252; }
+
+  /* Countdown overlay */
+  .countdown-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+    text-align: center;
+    display: none;
+  }
+  .countdown-number {
+    color: #fff;
+    font-size: 80px;
+    font-weight: bold;
+    text-shadow: 0 0 40px rgba(255, 150, 50, 0.8), 0 0 80px rgba(255, 100, 0, 0.4);
+  }
+  .countdown-label {
+    color: #ff9800;
+    font-size: 14px;
+    letter-spacing: 4px;
+  }
+
+  /* RIGHT SIDEBAR - Signal Trace + Adversary */
+  .sidebar-right {
+    border-left: 1px solid #1e3a5f;
     display: flex;
     flex-direction: column;
   }
+  .trace-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .trace-header {
-    padding: 8px 16px;
-    border-bottom: 1px solid #1e3a5f;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 6px 10px; border-bottom: 1px solid #1e3a5f;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
   }
-  .trace-title { color: #4fc3f7; font-size: 12px; letter-spacing: 2px; }
-  .trace-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 16px;
-    scroll-behavior: smooth;
-  }
+  .trace-title { color: #4fc3f7; font-size: 10px; letter-spacing: 2px; }
+  .trace-body { flex: 1; overflow-y: auto; padding: 4px 8px; scroll-behavior: smooth; }
   .trace-entry {
-    padding: 4px 0;
-    border-bottom: 1px solid #0d1520;
-    display: grid;
-    grid-template-columns: 70px 1fr 60px 50px;
-    gap: 8px;
-    align-items: center;
-    font-size: 11px;
-    animation: fadeIn 0.3s ease-in;
+    padding: 3px 0; border-bottom: 1px solid #0d1520;
+    font-size: 10px; animation: fadeIn 0.3s ease-in;
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .trace-line {
+    display: flex; gap: 6px; align-items: center;
   }
-  .trace-time { color: #607d8b; }
-  .trace-route { color: #b0bec5; }
+  .trace-time { color: #607d8b; flex-shrink: 0; width: 55px; }
+  .trace-route { color: #b0bec5; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .trace-route .src { color: #4fc3f7; }
   .trace-route .dst { color: #ce93d8; }
-  .trace-route .arrow { color: #455a64; margin: 0 4px; }
-  .trace-route .method { color: #ffab00; margin-right: 4px; font-weight: bold; }
-  .trace-status { font-weight: bold; }
+  .trace-route .arrow { color: #455a64; margin: 0 2px; }
+  .trace-route .method { color: #ffab00; font-weight: bold; }
+  .trace-status { flex-shrink: 0; font-weight: bold; }
   .trace-status.ok { color: #69f0ae; }
   .trace-status.denied { color: #ff5252; }
   .trace-status.error { color: #ff9800; }
-  .trace-latency { color: #607d8b; text-align: right; }
-  .trace-detail {
-    grid-column: 1 / -1;
-    color: #546e7a;
-    font-size: 10px;
-    padding-left: 78px;
-  }
+  .trace-detail { color: #546e7a; font-size: 9px; padding-left: 61px; }
   .trace-mtls { color: #69f0ae; }
   .trace-no-mtls { color: #ff5252; }
 
   .adversary-panel {
-    margin: 0 12px 12px 12px;
-    background: #1a0000;
-    border: 1px solid #b71c1c;
-    border-radius: 6px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    background: #1a0000; border-top: 1px solid #b71c1c;
+    padding: 8px 10px; flex-shrink: 0;
   }
-  .adversary-label {
-    color: #ff5252;
-    font-weight: bold;
-    font-size: 12px;
-    letter-spacing: 2px;
-    white-space: nowrap;
-  }
-  .adversary-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .adversary-label { color: #ff5252; font-weight: bold; font-size: 10px; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .adversary-actions { display: flex; gap: 3px; flex-wrap: wrap; }
+  .adversary-actions .btn { font-size: 9px; padding: 3px 6px; }
 
-  .trace-body::-webkit-scrollbar { width: 6px; }
+  .trace-body::-webkit-scrollbar { width: 4px; }
   .trace-body::-webkit-scrollbar-track { background: #0d1117; }
-  .trace-body::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+  .trace-body::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
+  .sidebar-left::-webkit-scrollbar { width: 4px; }
+  .sidebar-left::-webkit-scrollbar-track { background: #0a0e17; }
+  .sidebar-left::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
 </style>
 </head>
 <body>
@@ -211,129 +223,385 @@
   <div class="met">MET <span id="met">00:00:00:00</span></div>
 </div>
 
-<div class="grid">
-  <!-- KENNEDY -->
-  <div class="cell-panel" id="panel-kennedy">
-    <div class="cell-header">
-      <span class="cell-name">KENNEDY</span>
-      <span class="cell-status online" id="status-kennedy">ONLINE</span>
+<div class="main">
+  <!-- LEFT: Cell Panels -->
+  <div class="sidebar-left">
+    <div class="cell-panel" id="panel-kennedy">
+      <div class="cell-header">
+        <span class="cell-name">KENNEDY</span>
+        <span class="cell-status online">ONLINE</span>
+      </div>
+      <div class="component"><span class="component-name">launch-control</span><span class="component-indicator" id="ind-launch-control"></span></div>
+      <div class="component"><span class="component-name">ground-systems</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">weather-station</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">pad-operations</span><span class="component-indicator"></span></div>
+      <div class="telemetry-label">COUNTDOWN</div>
+      <div class="telemetry-value" id="countdown">T-00:10:00</div>
+      <div class="actions">
+        <button class="btn" onclick="action('launch')">INITIATE LAUNCH</button>
+        <button class="btn" onclick="action('goNoGo')">GO / NO-GO POLL</button>
+        <button class="btn" onclick="action('weather')">CHECK WEATHER</button>
+      </div>
     </div>
-    <div class="component"><span class="component-name">launch-control</span><span class="component-indicator" id="ind-launch-control"></span></div>
-    <div class="component"><span class="component-name">ground-systems</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">weather-station</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">pad-operations</span><span class="component-indicator"></span></div>
-    <div class="telemetry-label">COUNTDOWN</div>
-    <div class="telemetry-value" id="countdown">T-00:10:00</div>
-    <div class="actions">
-      <button class="btn" onclick="action('launch')">INITIATE LAUNCH</button>
-      <button class="btn" onclick="action('holdCountdown')">HOLD COUNTDOWN</button>
-      <button class="btn" onclick="action('weather')">CHECK WEATHER</button>
+
+    <div class="cell-panel highlight" id="panel-houston">
+      <div class="cell-header">
+        <span class="cell-name">HOUSTON</span>
+        <span class="cell-status online">ONLINE</span>
+      </div>
+      <div class="component"><span class="component-name">flight-director</span><span class="component-indicator" id="ind-flight-director"></span></div>
+      <div class="component"><span class="component-name">capcom</span><span class="component-indicator" id="ind-capcom"></span></div>
+      <div class="component"><span class="component-name">telemetry-monitor</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">flight-dynamics</span><span class="component-indicator"></span></div>
+      <div class="telemetry-label">PHASE</div>
+      <div class="telemetry-value" id="missionPhase">PRE-LAUNCH</div>
+      <div class="actions">
+        <button class="btn" onclick="action('sendCommand')">SEND CMD TO ORION</button>
+        <button class="btn" onclick="action('requestTelemetry')">REQUEST TELEMETRY</button>
+        <button class="btn danger" onclick="action('abort')">ABORT MISSION</button>
+      </div>
+    </div>
+
+    <div class="cell-panel" id="panel-orion">
+      <div class="cell-header">
+        <span class="cell-name">ORION</span>
+        <span class="cell-status online">ONLINE</span>
+      </div>
+      <div class="component"><span class="component-name">guidance-nav</span><span class="component-indicator" id="ind-guidance-nav"></span></div>
+      <div class="component"><span class="component-name">life-support</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">crew-interface</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">comms-system</span><span class="component-indicator" id="ind-comms"></span></div>
+      <div class="telemetry-label">CREW</div>
+      <div class="telemetry-value" id="crewVitals">ALL NOMINAL</div>
+    </div>
+
+    <div class="cell-panel" id="panel-dsn">
+      <div class="cell-header">
+        <span class="cell-name">DSN</span>
+        <span class="cell-status online">ONLINE</span>
+      </div>
+      <div class="component"><span class="component-name">goldstone</span><span class="component-indicator" id="ind-goldstone"></span></div>
+      <div class="component"><span class="component-name">madrid</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">canberra</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">signal-router</span><span class="component-indicator" id="ind-signal-router"></span></div>
+      <div class="telemetry-label">LINK</div>
+      <div class="telemetry-value" id="activeLink">GOLDSTONE</div>
+      <div class="telemetry-value" id="signalStrength" style="font-size:10px">-157.2 dBm</div>
+      <div class="actions">
+        <button class="btn" onclick="action('handover')">DSN HANDOVER</button>
+        <button class="btn" onclick="action('esaTelemetry')">ESA TELEMETRY</button>
+      </div>
+    </div>
+
+    <div class="cell-panel" id="panel-esa">
+      <div class="cell-header">
+        <span class="cell-name">ESA OPS</span>
+        <span class="cell-status online">ONLINE</span>
+      </div>
+      <div class="component"><span class="component-name">service-module-mon</span><span class="component-indicator"></span></div>
+      <div class="component"><span class="component-name">mission-relay</span><span class="component-indicator" id="ind-esa-relay"></span></div>
+      <div class="telemetry-label">SERVICE MODULE</div>
+      <div class="telemetry-value" id="propulsion">NOMINAL</div>
     </div>
   </div>
 
-  <!-- HOUSTON -->
-  <div class="cell-panel highlight" id="panel-houston">
-    <div class="cell-header">
-      <span class="cell-name">HOUSTON</span>
-      <span class="cell-status online" id="status-houston">ONLINE</span>
+  <!-- CENTER: 3D Visualization -->
+  <div class="viz-center">
+    <canvas id="rocketCanvas"></canvas>
+    <div class="phase-overlay">
+      <div class="phase-name" id="phaseDisplay">PRE-LAUNCH</div>
+      <div class="phase-detail" id="phaseDetail">LC-39B Kennedy Space Center</div>
     </div>
-    <div class="component"><span class="component-name">flight-director</span><span class="component-indicator" id="ind-flight-director"></span></div>
-    <div class="component"><span class="component-name">capcom</span><span class="component-indicator" id="ind-capcom"></span></div>
-    <div class="component"><span class="component-name">telemetry-monitor</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">flight-dynamics</span><span class="component-indicator"></span></div>
-    <div class="telemetry-label">MISSION STATUS</div>
-    <div class="telemetry-value" id="missionPhase">PRE-LAUNCH</div>
-    <div class="actions">
-      <button class="btn" onclick="action('sendCommand')">SEND COMMAND TO ORION</button>
-      <button class="btn" onclick="action('requestTelemetry')">REQUEST TELEMETRY</button>
-      <button class="btn" onclick="action('goNoGo')">GO / NO-GO POLL</button>
-      <button class="btn danger" onclick="action('abort')">ABORT MISSION</button>
+    <div class="countdown-overlay" id="countdownOverlay">
+      <div class="countdown-label">T-MINUS</div>
+      <div class="countdown-number" id="countdownBig">10</div>
     </div>
-  </div>
-
-  <!-- ORION -->
-  <div class="cell-panel" id="panel-orion">
-    <div class="cell-header">
-      <span class="cell-name">ORION</span>
-      <span class="cell-status online" id="status-orion">ONLINE</span>
-    </div>
-    <div class="component"><span class="component-name">guidance-nav</span><span class="component-indicator" id="ind-guidance-nav"></span></div>
-    <div class="component"><span class="component-name">life-support</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">crew-interface</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">comms-system</span><span class="component-indicator" id="ind-comms"></span></div>
-    <div class="telemetry-label">ALTITUDE</div>
-    <div class="telemetry-value" id="altitude">0 km</div>
-    <div class="telemetry-label">VELOCITY</div>
-    <div class="telemetry-value" id="velocity">0 km/s</div>
-    <div class="telemetry-label">CREW VITALS</div>
-    <div class="telemetry-value" id="crewVitals">ALL NOMINAL</div>
-  </div>
-
-  <!-- DSN -->
-  <div class="cell-panel" id="panel-dsn">
-    <div class="cell-header">
-      <span class="cell-name">DEEP SPACE NETWORK</span>
-      <span class="cell-status online" id="status-dsn">ONLINE</span>
-    </div>
-    <div class="component"><span class="component-name">goldstone</span><span class="component-indicator" id="ind-goldstone"></span></div>
-    <div class="component"><span class="component-name">madrid</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">canberra</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">signal-router</span><span class="component-indicator" id="ind-signal-router"></span></div>
-    <div class="telemetry-label">ACTIVE LINK</div>
-    <div class="telemetry-value" id="activeLink">GOLDSTONE</div>
-    <div class="telemetry-label">SIGNAL STRENGTH</div>
-    <div class="telemetry-value" id="signalStrength">-157.2 dBm</div>
-    <div class="actions">
-      <button class="btn" onclick="action('handover')">DSN HANDOVER</button>
+    <div class="hud-overlay">
+      <div class="hud-group">
+        <div class="hud-label">ALTITUDE</div>
+        <div class="hud-value" id="hudAlt">0 km</div>
+      </div>
+      <div class="hud-group">
+        <div class="hud-label">VELOCITY</div>
+        <div class="hud-value" id="hudVel">0 km/s</div>
+      </div>
+      <div class="hud-group">
+        <div class="hud-label">G-FORCE</div>
+        <div class="hud-value" id="hudG">1.0 G</div>
+      </div>
+      <div class="hud-group">
+        <div class="hud-label">THROTTLE</div>
+        <div class="hud-value" id="hudThrottle">0%</div>
+      </div>
     </div>
   </div>
 
-  <!-- ESA -->
-  <div class="cell-panel" id="panel-esa">
-    <div class="cell-header">
-      <span class="cell-name">ESA OPS</span>
-      <span class="cell-status online" id="status-esa">ONLINE</span>
+  <!-- RIGHT: Signal Trace + Adversary -->
+  <div class="sidebar-right">
+    <div class="trace-panel">
+      <div class="trace-header">
+        <span class="trace-title">SIGNAL TRACE</span>
+        <button class="btn" onclick="clearTrace()" style="padding:1px 6px;font-size:9px">CLEAR</button>
+      </div>
+      <div class="trace-body" id="traceBody"></div>
     </div>
-    <div class="component"><span class="component-name">service-module-monitor</span><span class="component-indicator"></span></div>
-    <div class="component"><span class="component-name">mission-relay</span><span class="component-indicator" id="ind-esa-relay"></span></div>
-    <div class="telemetry-label">SERVICE MODULE</div>
-    <div class="telemetry-value" id="propulsion">NOMINAL</div>
-    <div class="telemetry-label">SOLAR ARRAYS</div>
-    <div class="telemetry-value" id="solarArrays">14.2 kW</div>
-    <div class="actions">
-      <button class="btn" onclick="action('esaTelemetry')">ESA TELEMETRY</button>
+    <div class="adversary-panel">
+      <div class="adversary-label">ADVERSARY SIGNAL</div>
+      <div class="adversary-actions">
+        <button class="btn danger" onclick="adversary('abort')">ABORT CMD</button>
+        <button class="btn danger" onclick="adversary('maneuver')">HIJACK NAV</button>
+        <button class="btn danger" onclick="adversary('crewVitals')">STEAL VITALS</button>
+        <button class="btn danger" onclick="adversary('spoofHouston')">SPOOF ID</button>
+        <button class="btn warn" onclick="adversary('solarFlare')">SOLAR FLARE</button>
+      </div>
     </div>
   </div>
-</div>
-
-<!-- ADVERSARY -->
-<div class="adversary-panel">
-  <span class="adversary-label">ADVERSARY SIGNAL</span>
-  <div class="adversary-actions">
-    <button class="btn danger" onclick="adversary('abort')">SEND ABORT CMD</button>
-    <button class="btn danger" onclick="adversary('maneuver')">HIJACK NAVIGATION</button>
-    <button class="btn danger" onclick="adversary('crewVitals')">STEAL CREW VITALS</button>
-    <button class="btn danger" onclick="adversary('spoofHouston')">SPOOF HOUSTON ID</button>
-    <button class="btn warn" onclick="adversary('solarFlare')">INJECT SOLAR FLARE</button>
-  </div>
-</div>
-
-<!-- SIGNAL TRACE -->
-<div class="trace-panel">
-  <div class="trace-header">
-    <span class="trace-title">SIGNAL TRACE</span>
-    <button class="btn" onclick="clearTrace()" style="padding: 2px 8px; font-size: 10px;">CLEAR</button>
-  </div>
-  <div class="trace-body" id="traceBody"></div>
 </div>
 
 <script>
+// ==================== THREE.JS ROCKET SCENE ====================
+let scene, camera, renderer, rocket, flames, stars;
+let rocketState = {
+  phase: 'prelaunch', // prelaunch, ignition, liftoff, ascent, maxq, orbit, tli, lunar
+  altitude: 0, velocity: 0, gForce: 1.0, throttle: 0,
+  rocketY: 0, cameraY: 0, shake: 0, flameScale: 0
+};
+
+function initScene() {
+  const canvas = document.getElementById('rocketCanvas');
+  const container = canvas.parentElement;
+
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000511, 0.002);
+
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 2000);
+  camera.position.set(8, 5, 12);
+  camera.lookAt(0, 8, 0);
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000511);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x334466, 0.6);
+  scene.add(ambient);
+  const sun = new THREE.DirectionalLight(0xfff5e0, 1.2);
+  sun.position.set(20, 30, 10);
+  scene.add(sun);
+  const rimLight = new THREE.DirectionalLight(0x4488cc, 0.4);
+  rimLight.position.set(-10, 5, -10);
+  scene.add(rimLight);
+
+  buildRocket();
+  buildLaunchPad();
+  buildStars();
+  buildEarth();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+
+  animate();
+}
+
+function buildRocket() {
+  rocket = new THREE.Group();
+
+  // SLS Core stage (white/orange)
+  const coreMat = new THREE.MeshPhongMaterial({ color: 0xf5e6d0, emissive: 0x111111 });
+  const core = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 8, 16), coreMat);
+  core.position.y = 4;
+  rocket.add(core);
+
+  // Orion capsule (white)
+  const capsuleMat = new THREE.MeshPhongMaterial({ color: 0xeeeeee, emissive: 0x222222 });
+  const capsule = new THREE.Mesh(new THREE.ConeGeometry(0.8, 2, 16), capsuleMat);
+  capsule.position.y = 9;
+  rocket.add(capsule);
+
+  // Launch escape tower
+  const towerMat = new THREE.MeshPhongMaterial({ color: 0xcc3333 });
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.5, 8), towerMat);
+  tower.position.y = 11;
+  rocket.add(tower);
+  const towerCone = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.5, 8), towerMat);
+  towerCone.position.y = 12.4;
+  rocket.add(towerCone);
+
+  // SRBs (2 side boosters)
+  const srbMat = new THREE.MeshPhongMaterial({ color: 0xe8ddd0 });
+  [-1.3, 1.3].forEach(x => {
+    const srb = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 7, 12), srbMat);
+    srb.position.set(x, 3.5, 0);
+    rocket.add(srb);
+    const srbNose = new THREE.Mesh(new THREE.ConeGeometry(0.4, 1, 12), srbMat);
+    srbNose.position.set(x, 7.5, 0);
+    rocket.add(srbNose);
+    const srbNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.5, 12), new THREE.MeshPhongMaterial({ color: 0x444444 }));
+    srbNozzle.position.set(x, -0.25, 0);
+    rocket.add(srbNozzle);
+  });
+
+  // Engine nozzle
+  const nozzleMat = new THREE.MeshPhongMaterial({ color: 0x555555, emissive: 0x111111 });
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.3, 1, 16), nozzleMat);
+  nozzle.position.y = -0.5;
+  rocket.add(nozzle);
+
+  // Flame (initially hidden)
+  flames = new THREE.Group();
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.9 });
+  const flameCore = new THREE.Mesh(new THREE.ConeGeometry(0.5, 4, 12), flameMat);
+  flameCore.rotation.x = Math.PI;
+  flameCore.position.y = -3;
+  flames.add(flameCore);
+
+  const flameInner = new THREE.Mesh(new THREE.ConeGeometry(0.3, 5, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.8 }));
+  flameInner.rotation.x = Math.PI;
+  flameInner.position.y = -3.5;
+  flames.add(flameInner);
+
+  const flameHot = new THREE.Mesh(new THREE.ConeGeometry(0.15, 3, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 }));
+  flameHot.rotation.x = Math.PI;
+  flameHot.position.y = -2.5;
+  flames.add(flameHot);
+
+  // SRB flames
+  [-1.3, 1.3].forEach(x => {
+    const srbFlame = new THREE.Mesh(new THREE.ConeGeometry(0.35, 3, 10),
+      new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.85 }));
+    srbFlame.rotation.x = Math.PI;
+    srbFlame.position.set(x, -2.5, 0);
+    flames.add(srbFlame);
+  });
+
+  flames.visible = false;
+  flames.scale.set(0, 0, 0);
+  rocket.add(flames);
+
+  rocket.position.y = 0;
+  scene.add(rocket);
+}
+
+function buildLaunchPad() {
+  const padGroup = new THREE.Group();
+
+  // Ground plane
+  const groundMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -1;
+  padGroup.add(ground);
+
+  // Launch tower
+  const towerMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
+  const launchTower = new THREE.Mesh(new THREE.BoxGeometry(0.8, 16, 0.8), towerMat);
+  launchTower.position.set(3, 7, 0);
+  padGroup.add(launchTower);
+
+  // Tower arm
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.3, 0.4), towerMat);
+  arm.position.set(1.5, 10, 0);
+  padGroup.add(arm);
+
+  // Pad base
+  const baseMat = new THREE.MeshPhongMaterial({ color: 0x555555 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(3, 3.5, 1, 16), baseMat);
+  base.position.y = -0.5;
+  padGroup.add(base);
+
+  scene.add(padGroup);
+}
+
+function buildStars() {
+  const starsGeo = new THREE.BufferGeometry();
+  const positions = new Float32Array(3000 * 3);
+  for (let i = 0; i < 3000; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 1500;
+    positions[i * 3 + 1] = Math.random() * 800 + 20;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 1500;
+  }
+  starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, sizeAttenuation: true });
+  stars = new THREE.Points(starsGeo, starsMat);
+  scene.add(stars);
+}
+
+function buildEarth() {
+  // Simple Earth sphere (visible during orbit/TLI)
+  const earthMat = new THREE.MeshPhongMaterial({ color: 0x2244aa, emissive: 0x112244 });
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(80, 32, 32), earthMat);
+  earth.position.y = -82;
+  earth.name = 'earth';
+  scene.add(earth);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = Date.now() * 0.001;
+  const s = rocketState;
+
+  // Flame animation
+  if (s.flameScale > 0) {
+    flames.visible = true;
+    const flicker = 0.9 + Math.random() * 0.2;
+    flames.scale.set(s.flameScale * flicker, s.flameScale * (0.8 + Math.random() * 0.4), s.flameScale * flicker);
+    // Flame light
+    flames.children.forEach(c => {
+      if (c.material) c.material.opacity = 0.6 + Math.random() * 0.4;
+    });
+  } else {
+    flames.visible = false;
+  }
+
+  // Camera shake during liftoff
+  if (s.shake > 0) {
+    camera.position.x = 8 + (Math.random() - 0.5) * s.shake;
+    camera.position.z = 12 + (Math.random() - 0.5) * s.shake;
+  }
+
+  // Phase-specific camera
+  if (s.phase === 'prelaunch' || s.phase === 'ignition') {
+    camera.position.set(8, 5, 12);
+    camera.lookAt(0, 8, 0);
+  } else if (s.phase === 'liftoff' || s.phase === 'ascent') {
+    camera.position.y += (s.rocketY + 5 - camera.position.y) * 0.03;
+    camera.lookAt(0, s.rocketY + 5, 0);
+  } else if (s.phase === 'maxq') {
+    camera.position.y += (s.rocketY + 3 - camera.position.y) * 0.02;
+    camera.position.x += (5 - camera.position.x) * 0.01;
+    camera.lookAt(0, s.rocketY + 5, 0);
+  } else if (s.phase === 'orbit' || s.phase === 'tli') {
+    camera.position.y += (s.rocketY + 2 - camera.position.y) * 0.02;
+    camera.position.x += (4 - camera.position.x) * 0.01;
+    camera.position.z += (6 - camera.position.z) * 0.01;
+    camera.lookAt(0, s.rocketY + 3, 0);
+  }
+
+  // Rocket position
+  rocket.position.y = s.rocketY;
+
+  // Slow rotation in orbit
+  if (s.phase === 'orbit' || s.phase === 'tli' || s.phase === 'lunar') {
+    rocket.rotation.y += 0.002;
+    rocket.rotation.z = Math.sin(t * 0.3) * 0.05;
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ==================== MISSION SIMULATION ====================
 const API_BASE = window.location.origin;
 const traceBody = document.getElementById('traceBody');
 let metSeconds = 0;
 let missionStarted = false;
+let simInterval = null;
 
-// Mission Elapsed Time counter
 setInterval(() => {
   if (!missionStarted) return;
   metSeconds++;
@@ -343,61 +611,165 @@ setInterval(() => {
   document.getElementById('met').textContent = `00:${h}:${m}:${s}`;
 }, 1000);
 
-// SSE connection for real-time trace
+function setPhase(name, detail) {
+  document.getElementById('phaseDisplay').textContent = name;
+  document.getElementById('phaseDetail').textContent = detail || '';
+  document.getElementById('missionPhase').textContent = name;
+}
+
+function updateHUD() {
+  const s = rocketState;
+  document.getElementById('hudAlt').textContent = s.altitude < 1000 ? `${s.altitude.toFixed(1)} km` : `${(s.altitude / 1000).toFixed(1)}k km`;
+  document.getElementById('hudVel').textContent = `${s.velocity.toFixed(2)} km/s`;
+  document.getElementById('hudG').textContent = `${s.gForce.toFixed(1)} G`;
+  document.getElementById('hudThrottle').textContent = `${Math.round(s.throttle)}%`;
+  document.getElementById('altitude').textContent = document.getElementById('hudAlt').textContent;
+  document.getElementById('velocity').textContent = document.getElementById('hudVel').textContent;
+  document.getElementById('signalStrength').textContent = `${(-157 - s.altitude * 0.001).toFixed(1)} dBm`;
+}
+
+function simulateMission() {
+  const s = rocketState;
+
+  simInterval = setInterval(() => {
+    switch (s.phase) {
+      case 'ignition':
+        s.flameScale = Math.min(s.flameScale + 0.15, 1.0);
+        s.throttle = Math.min(s.throttle + 15, 100);
+        s.shake = 0.3;
+        if (s.throttle >= 100) {
+          s.phase = 'liftoff';
+          setPhase('LIFTOFF', 'All engines running - tower clear');
+          addLocalTrace('kennedy/launch-control', 'houston/flight-director', 'POST', '/handoff', 200, '8ms');
+        }
+        break;
+
+      case 'liftoff':
+        s.rocketY += 0.08;
+        s.altitude += 0.5;
+        s.velocity += 0.02;
+        s.gForce = 1.0 + s.velocity * 0.3;
+        s.shake = Math.max(0.4 - s.rocketY * 0.005, 0);
+        if (s.altitude > 15) {
+          s.phase = 'ascent';
+          setPhase('ASCENT', 'Gravity turn initiated');
+          addLocalTrace('houston/capcom', 'orion/comms-system', 'POST', '/uplink', 200, '45ms');
+        }
+        break;
+
+      case 'ascent':
+        s.rocketY += 0.3 + s.velocity * 0.05;
+        s.altitude += 2 + s.velocity * 0.5;
+        s.velocity += 0.04;
+        s.gForce = 1.0 + s.velocity * 0.4;
+        s.shake = 0;
+        rocket.rotation.z += 0.0008; // gravity turn tilt
+        if (s.altitude > 100) {
+          s.phase = 'maxq';
+          setPhase('MAX-Q', 'Maximum dynamic pressure');
+          document.getElementById('hudG').classList.add('alert');
+          addLocalTrace('orion/comms-system', 'dsn/goldstone', 'POST', '/downlink', 200, '120ms');
+        }
+        break;
+
+      case 'maxq':
+        s.rocketY += 0.5 + s.velocity * 0.05;
+        s.altitude += 3 + s.velocity;
+        s.velocity += 0.05;
+        s.gForce = 2.5 + Math.sin(Date.now() * 0.001) * 0.3;
+        if (s.altitude > 300) {
+          s.phase = 'orbit';
+          s.gForce = 0;
+          s.flameScale = 0.3;
+          document.getElementById('hudG').classList.remove('alert');
+          setPhase('ORBIT INSERTION', 'Main engine cutoff - MECO');
+          addLocalTrace('houston/flight-director', 'houston/capcom', 'POST', '/uplink/voice', 200, '1ms');
+          addLocalTrace('dsn/signal-router', 'houston/telemetry-monitor', 'POST', '/ingest', 200, '15ms');
+        }
+        break;
+
+      case 'orbit':
+        s.rocketY += 0.05;
+        s.altitude += 0.5;
+        s.velocity = 7.8 + Math.sin(Date.now() * 0.0005) * 0.1;
+        s.gForce = 0;
+        s.flameScale = 0;
+        s.throttle = 0;
+        if (s.altitude > 500) {
+          s.phase = 'tli';
+          s.flameScale = 1.2;
+          s.throttle = 100;
+          setPhase('TRANS-LUNAR INJECTION', 'TLI burn - escape velocity');
+          addLocalTrace('houston/flight-dynamics', 'houston/capcom', 'POST', '/trajectory/correction', 200, '8ms');
+          addLocalTrace('houston/capcom', 'orion/comms-system', 'POST', '/uplink', 200, '90ms');
+          addLocalTrace('esa-ops/service-module-monitor', 'esa-ops/mission-relay', 'POST', '/relay/telemetry', 200, '34ms');
+        }
+        break;
+
+      case 'tli':
+        s.rocketY += 0.1;
+        s.altitude += 5 + s.velocity;
+        s.velocity += 0.03;
+        s.gForce = 1.5;
+        if (s.altitude > 2000) {
+          s.phase = 'lunar';
+          s.flameScale = 0;
+          s.throttle = 0;
+          s.gForce = 0;
+          setPhase('LUNAR TRANSIT', 'Coasting to the Moon - 384,400 km');
+          addLocalTrace('orion/comms-system', 'dsn/goldstone', 'POST', '/downlink', 200, '1200ms');
+          addLocalTrace('dsn/signal-router', 'houston/telemetry-monitor', 'POST', '/ingest', 200, '15ms');
+          addLocalTrace('esa-ops/mission-relay', 'houston/telemetry-monitor', 'POST', '/relay/telemetry', 200, '45ms');
+        }
+        break;
+
+      case 'lunar':
+        s.altitude += 20;
+        s.velocity = 10.8 + Math.sin(Date.now() * 0.0003) * 0.2;
+        if (s.altitude > 384400) {
+          setPhase('LUNAR ORBIT', 'Orion has arrived at the Moon');
+          clearInterval(simInterval);
+        }
+        break;
+    }
+    updateHUD();
+  }, 100);
+}
+
+// ==================== UI ACTIONS ====================
 function connectSSE() {
   const evtSource = new EventSource(API_BASE + '/events');
-  evtSource.onmessage = (e) => {
-    const evt = JSON.parse(e.data);
-    addTraceEntry(evt);
-  };
-  evtSource.onerror = () => {
-    setTimeout(connectSSE, 3000);
-  };
+  evtSource.onmessage = (e) => addTraceEntry(JSON.parse(e.data));
+  evtSource.onerror = () => setTimeout(connectSSE, 3000);
 }
 connectSSE();
 
 function addTraceEntry(evt) {
   const statusClass = evt.status >= 200 && evt.status < 300 ? 'ok' : evt.status >= 400 ? 'denied' : 'error';
-  const statusText = evt.status >= 200 && evt.status < 300 ? `${evt.status} OK` :
-                     evt.status === 403 ? '403 DENIED' :
-                     evt.status === 0 ? 'CONN ERR' : `${evt.status} ERR`;
-  const mtlsHtml = evt.mtls ? '<span class="trace-mtls">mTLS</span>' : '<span class="trace-no-mtls">NO-TLS</span>';
-
+  const statusText = evt.status >= 200 && evt.status < 300 ? 'OK' :
+                     evt.status === 403 ? 'DENY' : evt.status === 0 ? 'ERR' : `${evt.status}`;
+  const mtlsHtml = evt.mtls ? '<span class="trace-mtls">mTLS</span>' : '<span class="trace-no-mtls">PLAIN</span>';
   const entry = document.createElement('div');
+  entry.className = 'trace-entry';
   entry.innerHTML = `
-    <div class="trace-entry">
+    <div class="trace-line">
       <span class="trace-time">${evt.timestamp}</span>
-      <span class="trace-route">
-        <span class="method">${evt.method}</span>
-        <span class="src">${evt.source}</span>
-        <span class="arrow">&rarr;</span>
-        <span class="dst">${evt.target}</span>
-      </span>
+      <span class="trace-route"><span class="method">${evt.method}</span> <span class="src">${evt.source}</span><span class="arrow">&rarr;</span><span class="dst">${evt.target}</span></span>
       <span class="trace-status ${statusClass}">${statusText}</span>
-      <span class="trace-latency">${evt.latency}</span>
     </div>
-    ${evt.error ? `<div class="trace-detail">error: ${evt.error}</div>` : ''}
-    <div class="trace-detail">${mtlsHtml} | path: ${evt.path}</div>
+    ${evt.error ? `<div class="trace-detail">err: ${evt.error}</div>` : ''}
+    <div class="trace-detail">${mtlsHtml} ${evt.path}</div>
   `;
   traceBody.appendChild(entry);
   traceBody.scrollTop = traceBody.scrollHeight;
-
-  // Flash the relevant indicator
   flashIndicator(evt.source, evt.target);
 }
 
 function addLocalTrace(source, target, method, path, status, latency, error) {
-  addTraceEntry({
-    timestamp: new Date().toISOString().substr(11, 8),
-    source, target, method, path, status,
-    latency: latency || '0ms',
-    mtls: status >= 200 && status < 300,
-    error: error || ''
-  });
+  addTraceEntry({ timestamp: new Date().toISOString().substr(11, 8), source, target, method, path, status, latency: latency || '0ms', mtls: status >= 200 && status < 300, error: error || '' });
 }
 
 function flashIndicator(source, target) {
-  // Simple flash effect on component indicators
   document.querySelectorAll('.component-indicator').forEach(el => {
     const name = el.id?.replace('ind-', '');
     if (name && (source.includes(name) || target.includes(name))) {
@@ -407,47 +779,48 @@ function flashIndicator(source, target) {
   });
 }
 
-function clearTrace() {
-  traceBody.innerHTML = '';
-}
+function clearTrace() { traceBody.innerHTML = ''; }
 
 async function apiCall(method, path) {
-  try {
-    const resp = await fetch(API_BASE + path, { method });
-    const data = await resp.json();
-    return { status: resp.status, data };
-  } catch (e) {
-    return { status: 0, error: e.message };
-  }
+  try { const r = await fetch(API_BASE + path, { method }); return { status: r.status, data: await r.json() }; }
+  catch (e) { return { status: 0, error: e.message }; }
 }
 
 async function action(name) {
   switch (name) {
     case 'launch':
       missionStarted = true;
-      document.getElementById('missionPhase').textContent = 'LAUNCH SEQUENCE';
-      document.getElementById('countdown').textContent = 'T-00:00:10';
+      setPhase('LAUNCH SEQUENCE', 'T-10 seconds - Go for launch');
       addLocalTrace('houston/flight-director', 'kennedy/launch-control', 'POST', '/countdown/start', 200, '12ms');
       await apiCall('POST', '/decision/go-nogo');
 
-      // Countdown animation
+      const overlay = document.getElementById('countdownOverlay');
+      overlay.style.display = 'block';
       let count = 10;
-      const countdownInterval = setInterval(() => {
+      const cdInt = setInterval(() => {
         count--;
+        document.getElementById('countdownBig').textContent = count;
         document.getElementById('countdown').textContent = count > 0 ? `T-00:00:${count.toString().padStart(2, '0')}` : 'T+00:00:00';
+        if (count === 3) {
+          rocketState.phase = 'ignition';
+          setPhase('IGNITION', 'Main engine start');
+          simulateMission();
+        }
         if (count <= 0) {
-          clearInterval(countdownInterval);
-          document.getElementById('missionPhase').textContent = 'ASCENT';
-          addLocalTrace('kennedy/launch-control', 'houston/flight-director', 'POST', '/handoff', 200, '8ms');
-          addLocalTrace('houston/flight-director', 'houston/capcom', 'POST', '/uplink/voice', 200, '1ms');
-          simulateAscent();
+          clearInterval(cdInt);
+          overlay.style.display = 'none';
+          document.getElementById('missionStatus').textContent = 'MISSION ACTIVE';
         }
       }, 1000);
       break;
 
-    case 'holdCountdown':
-      document.getElementById('missionPhase').textContent = 'HOLD';
-      addLocalTrace('houston/flight-director', 'kennedy/launch-control', 'POST', '/countdown/hold', 200, '5ms');
+    case 'goNoGo':
+      addLocalTrace('houston/flight-director', 'kennedy/launch-control', 'GET', '/countdown/status', 200, '15ms');
+      addLocalTrace('houston/flight-director', 'kennedy/weather-station', 'GET', '/launch-criteria', 200, '18ms');
+      addLocalTrace('houston/flight-director', 'esa-ops/svc-module-monitor', 'GET', '/propulsion/status', 200, '45ms');
+      addLocalTrace('houston/flight-director', 'dsn/signal-router', 'GET', '/active-link', 200, '12ms');
+      document.getElementById('missionStatus').textContent = 'GO FOR LAUNCH';
+      document.getElementById('missionStatus').className = 'status-badge status-nominal';
       break;
 
     case 'weather':
@@ -456,25 +829,18 @@ async function action(name) {
       break;
 
     case 'sendCommand':
-      const cmdResult = await apiCall('POST', '/uplink/command');
+      await apiCall('POST', '/uplink/command');
       break;
 
     case 'requestTelemetry':
-      const telResult = await apiCall('GET', '/downlink/telemetry');
-      if (telResult.data) updateTelemetry(telResult.data);
-      break;
-
-    case 'goNoGo':
-      addLocalTrace('houston/flight-director', 'kennedy/launch-control', 'GET', '/countdown/status', 200, '15ms');
-      addLocalTrace('houston/flight-director', 'kennedy/weather-station', 'GET', '/launch-criteria', 200, '18ms');
-      addLocalTrace('houston/flight-director', 'esa-ops/service-module-monitor', 'GET', '/propulsion/status', 200, '45ms');
-      addLocalTrace('houston/flight-director', 'dsn/signal-router', 'GET', '/active-link', 200, '12ms');
-      document.getElementById('missionStatus').textContent = 'GO FOR LAUNCH';
-      document.getElementById('missionStatus').className = 'status-badge status-nominal';
+      const r = await apiCall('GET', '/downlink/telemetry');
+      if (r.data) { if (r.data.crewVitals) document.getElementById('crewVitals').textContent = r.data.crewVitals; }
       break;
 
     case 'abort':
-      document.getElementById('missionPhase').textContent = 'ABORT';
+      if (simInterval) clearInterval(simInterval);
+      rocketState.flameScale = 0; rocketState.throttle = 0;
+      setPhase('ABORT', 'Mission abort commanded');
       document.getElementById('missionStatus').textContent = 'ABORT ABORT ABORT';
       document.getElementById('missionStatus').className = 'status-badge status-alert';
       await apiCall('POST', '/decision/abort');
@@ -482,24 +848,22 @@ async function action(name) {
 
     case 'handover':
       const stations = ['GOLDSTONE', 'MADRID', 'CANBERRA'];
-      const current = document.getElementById('activeLink').textContent;
-      const next = stations[(stations.indexOf(current) + 1) % stations.length];
-      addLocalTrace('dsn/signal-router', `dsn/${next.toLowerCase()}`, 'POST', '/handover', 200, '120ms');
-      document.getElementById('activeLink').textContent = next;
+      const cur = document.getElementById('activeLink').textContent;
+      const nxt = stations[(stations.indexOf(cur) + 1) % stations.length];
+      addLocalTrace('dsn/signal-router', `dsn/${nxt.toLowerCase()}`, 'POST', '/handover', 200, '120ms');
+      document.getElementById('activeLink').textContent = nxt;
       break;
 
     case 'esaTelemetry':
-      addLocalTrace('esa-ops/service-module-monitor', 'orion/comms-system', 'GET', '/propulsion/status', 200, '89ms');
+      addLocalTrace('esa-ops/svc-module-monitor', 'orion/comms-system', 'GET', '/propulsion/status', 200, '89ms');
       addLocalTrace('esa-ops/mission-relay', 'houston/telemetry-monitor', 'POST', '/relay/telemetry', 200, '34ms');
       break;
   }
 }
 
 async function adversary(type) {
-  const panel = document.querySelector('.adversary-panel');
-  panel.style.boxShadow = '0 0 20px rgba(255, 0, 0, 0.5)';
-  setTimeout(() => panel.style.boxShadow = '', 1000);
-
+  document.querySelector('.adversary-panel').style.boxShadow = '0 0 20px rgba(255,0,0,0.5)';
+  setTimeout(() => document.querySelector('.adversary-panel').style.boxShadow = '', 1000);
   switch (type) {
     case 'abort':
       addLocalTrace('ADVERSARY', 'houston/flight-director', 'POST', '/decision/abort', 403, '2ms', 'RBAC: identity not in allowlist');
@@ -508,18 +872,18 @@ async function adversary(type) {
       addLocalTrace('ADVERSARY', 'orion/guidance-nav', 'POST', '/maneuver', 403, '1ms', 'RBAC: source principal denied');
       break;
     case 'crewVitals':
-      addLocalTrace('ADVERSARY', 'orion/life-support', 'GET', '/crew/vitals', 403, '1ms', 'RBAC: classified data - unauthorized identity');
+      addLocalTrace('ADVERSARY', 'orion/life-support', 'GET', '/crew/vitals', 403, '1ms', 'RBAC: classified - unauthorized identity');
       break;
     case 'spoofHouston':
-      addLocalTrace('ADVERSARY (spoofed: houston/capcom)', 'orion/comms-system', 'POST', '/uplink/command', 403, '1ms', 'SPIFFE identity mismatch: expected spiffe://cluster.local/ns/houston/sa/capcom');
+      addLocalTrace('ADVERSARY [spoofed: capcom]', 'orion/comms-system', 'POST', '/uplink/command', 403, '1ms', 'SPIFFE mismatch: expected spiffe://cluster.local/ns/houston/sa/capcom');
       break;
     case 'solarFlare':
-      document.getElementById('missionStatus').textContent = 'SOLAR EVENT - SIGNAL DEGRADED';
+      document.getElementById('missionStatus').textContent = 'SOLAR EVENT';
       document.getElementById('missionStatus').className = 'status-badge status-alert';
       document.getElementById('signalStrength').textContent = '-189.7 dBm';
       document.getElementById('signalStrength').style.color = '#ff5252';
-      addLocalTrace('SOLAR FLARE', 'dsn/goldstone', 'N/A', '/interference', 0, '5000ms', 'Signal degradation: particle event');
-      addLocalTrace('dsn/signal-router', 'dsn/madrid', 'POST', '/handover', 200, '3200ms', 'Emergency handover - high latency');
+      addLocalTrace('SOLAR FLARE', 'dsn/goldstone', 'N/A', '/interference', 0, '5000ms', 'Particle event - signal degradation');
+      addLocalTrace('dsn/signal-router', 'dsn/madrid', 'POST', '/handover', 200, '3200ms', 'Emergency handover');
       setTimeout(() => {
         document.getElementById('missionStatus').textContent = 'SIGNAL RECOVERED';
         document.getElementById('missionStatus').className = 'status-badge status-nominal';
@@ -531,36 +895,8 @@ async function adversary(type) {
   }
 }
 
-function simulateAscent() {
-  let alt = 0;
-  let vel = 0;
-  const ascentInterval = setInterval(() => {
-    alt += Math.random() * 15 + 5;
-    vel += Math.random() * 0.3 + 0.1;
-    document.getElementById('altitude').textContent = `${alt.toFixed(1)} km`;
-    document.getElementById('velocity').textContent = `${vel.toFixed(2)} km/s`;
-    document.getElementById('signalStrength').textContent = `${(-157 - alt * 0.01).toFixed(1)} dBm`;
-
-    if (alt > 200) {
-      document.getElementById('missionPhase').textContent = 'ORBIT INSERTION';
-    }
-    if (alt > 500) {
-      document.getElementById('missionPhase').textContent = 'TRANS-LUNAR INJECTION';
-    }
-    if (alt > 1000) {
-      clearInterval(ascentInterval);
-      document.getElementById('missionPhase').textContent = 'LUNAR TRANSIT';
-      addLocalTrace('orion/comms-system', 'dsn/goldstone', 'POST', '/downlink', 200, '1200ms');
-      addLocalTrace('dsn/signal-router', 'houston/telemetry-monitor', 'POST', '/ingest', 200, '15ms');
-    }
-  }, 2000);
-}
-
-function updateTelemetry(data) {
-  if (data.altitude) document.getElementById('altitude').textContent = data.altitude;
-  if (data.velocity) document.getElementById('velocity').textContent = data.velocity;
-  if (data.crewVitals) document.getElementById('crewVitals').textContent = data.crewVitals;
-}
+// Init
+initScene();
 </script>
 </body>
 </html>
