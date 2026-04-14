@@ -13,6 +13,15 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
+  environmentConfigs:
+    - environmentName: development
+      resources:
+        requests:
+          cpu: "5m"
+          memory: "16Mi"
+        limits:
+          cpu: "25m"
+          memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -29,7 +38,7 @@ spec:
       port: 8080
       visibility: [project]
   container:
-    image: "artemis-demo:latest"
+    image: "nomadxd/artemis-demo:latest"
     env:
       - key: CONFIG_PATH
         value: "config/orion-guidance-nav.yaml"
@@ -47,6 +56,15 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
+  environmentConfigs:
+    - environmentName: development
+      resources:
+        requests:
+          cpu: "5m"
+          memory: "16Mi"
+        limits:
+          cpu: "25m"
+          memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -63,7 +81,7 @@ spec:
       port: 8080
       visibility: [project]
   container:
-    image: "artemis-demo:latest"
+    image: "nomadxd/artemis-demo:latest"
     env:
       - key: CONFIG_PATH
         value: "config/orion-life-support.yaml"
@@ -81,6 +99,15 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
+  environmentConfigs:
+    - environmentName: development
+      resources:
+        requests:
+          cpu: "5m"
+          memory: "16Mi"
+        limits:
+          cpu: "25m"
+          memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -97,7 +124,7 @@ spec:
       port: 8080
       visibility: [project]
   container:
-    image: "artemis-demo:latest"
+    image: "nomadxd/artemis-demo:latest"
     env:
       - key: CONFIG_PATH
         value: "config/orion-crew-interface.yaml"
@@ -115,6 +142,15 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
+  environmentConfigs:
+    - environmentName: development
+      resources:
+        requests:
+          cpu: "5m"
+          memory: "16Mi"
+        limits:
+          cpu: "25m"
+          memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -131,7 +167,7 @@ spec:
       port: 8080
       visibility: [namespace]
   container:
-    image: "artemis-demo:latest"
+    image: "nomadxd/artemis-demo:latest"
     env:
       - key: CONFIG_PATH
         value: "config/orion-comms-system.yaml"

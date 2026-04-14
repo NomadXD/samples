@@ -50,8 +50,7 @@ spec:
       serviceAccountName: adversary
       containers:
         - name: proxy
-          image: artemis-demo:latest
-          imagePullPolicy: Never
+          image: nomadxd/artemis-demo:latest
           env:
             - name: CONFIG_PATH
               value: config/adversary-proxy.yaml
@@ -134,8 +133,7 @@ spec:
       serviceAccountName: adversary
       containers:
         - name: proxy
-          image: artemis-demo:latest
-          imagePullPolicy: Never
+          image: nomadxd/artemis-demo:latest
           env:
             - name: CONFIG_PATH
               value: config/adversary-proxy.yaml

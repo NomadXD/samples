@@ -1,16 +1,18 @@
 # Istio AuthorizationPolicies for the Artemis II mission.
 #
-# These enforce L7 access control within each Cell, complementing
-# OpenChoreo's L4 NetworkPolicies. The waypoint proxy evaluates
-# these rules based on SPIFFE identity and HTTP attributes.
+# Zero-trust model: ALLOW only known identities. Everything else
+# is implicitly denied — no DENY policies needed.
 #
-# Key design: OpenChoreo deploys all components with the namespace's
-# `default` ServiceAccount. The adversary uses a dedicated `adversary` SA.
-# We use targeted DENY policies to block the adversary SA, and ALLOW
-# policies matching by namespace for legitimate intra/cross-cell traffic.
+# OpenChoreo deploys all components with the namespace's `default`
+# ServiceAccount. Istio ambient assigns each pod a SPIFFE identity:
+#   cluster.local/ns/<namespace>/sa/default
 #
-# Istio evaluates DENY before ALLOW, so the adversary is always blocked
-# even though its namespace is in the ALLOW list.
+# The adversary uses a dedicated `adversary` SA, so its identity is:
+#   cluster.local/ns/<namespace>/sa/adversary
+#
+# Since the ALLOW rules only match `sa/default`, the adversary
+# (or any other unknown SA) is automatically denied — we don't
+# need to know who the attacker is, only who the legitimate callers are.
 #
 # Usage:
 #   Replace HOUSTON_NS, ORION_NS, DSN_NS, KENNEDY_NS with the actual
@@ -21,25 +23,8 @@
 # HOUSTON CELL
 # ============================================================
 
-# DENY: Block adversary SA from reaching flight-director
-apiVersion: security.istio.io/v1
-kind: AuthorizationPolicy
-metadata:
-  name: deny-adversary
-  namespace: HOUSTON_NS
-spec:
-  targetRefs:
-    - kind: Service
-      group: ""
-      name: flight-director
-  action: DENY
-  rules:
-    - from:
-        - source:
-            principals: ["cluster.local/ns/HOUSTON_NS/sa/adversary"]
-
----
-# ALLOW: Legitimate access to flight-director
+# flight-director: the mission authority
+# Allowed: gateway (dashboard), Houston intra-cell, Kennedy handoff
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -56,14 +41,14 @@ spec:
     - from:
         - source:
             principals: ["cluster.local/ns/openchoreo-data-plane/sa/*"]
-    # Intra-cell (capcom, telemetry-monitor, flight-dynamics)
+    # Intra-cell: only default SA (capcom, telemetry-monitor, etc.)
     - from:
         - source:
-            namespaces: ["HOUSTON_NS"]
+            principals: ["cluster.local/ns/HOUSTON_NS/sa/default"]
     # Kennedy launch-control for handoff
     - from:
         - source:
-            namespaces: ["KENNEDY_NS"]
+            principals: ["cluster.local/ns/KENNEDY_NS/sa/default"]
       to:
         - operation:
             methods: ["POST"]
@@ -74,61 +59,8 @@ spec:
 # ORION CELL
 # ============================================================
 
-# DENY: Block adversary SA from guidance-nav
-apiVersion: security.istio.io/v1
-kind: AuthorizationPolicy
-metadata:
-  name: deny-adversary-gn
-  namespace: ORION_NS
-spec:
-  targetRefs:
-    - kind: Service
-      group: ""
-      name: guidance-nav
-  action: DENY
-  rules:
-    - from:
-        - source:
-            principals: ["cluster.local/ns/ORION_NS/sa/adversary"]
-
----
-# DENY: Block adversary SA from life-support (classified crew data)
-apiVersion: security.istio.io/v1
-kind: AuthorizationPolicy
-metadata:
-  name: deny-adversary-ls
-  namespace: ORION_NS
-spec:
-  targetRefs:
-    - kind: Service
-      group: ""
-      name: life-support
-  action: DENY
-  rules:
-    - from:
-        - source:
-            principals: ["cluster.local/ns/ORION_NS/sa/adversary"]
-
----
-# DENY: Block adversary SA from comms-system
-apiVersion: security.istio.io/v1
-kind: AuthorizationPolicy
-metadata:
-  name: deny-adversary-cs
-  namespace: ORION_NS
-spec:
-  targetRefs:
-    - kind: Service
-      group: ""
-      name: comms-system
-  action: DENY
-  rules:
-    - from:
-        - source:
-            principals: ["cluster.local/ns/ORION_NS/sa/adversary"]
-
----
-# ALLOW: Legitimate access to comms-system
+# comms-system: the spacecraft's communication link
+# Allowed: Houston (uplink commands), DSN (downlink), Orion intra-cell
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -144,7 +76,7 @@ spec:
     # Houston can uplink commands
     - from:
         - source:
-            namespaces: ["HOUSTON_NS"]
+            principals: ["cluster.local/ns/HOUSTON_NS/sa/default"]
       to:
         - operation:
             methods: ["POST"]
@@ -152,7 +84,7 @@ spec:
     # DSN can request downlink
     - from:
         - source:
-            namespaces: ["DSN_NS"]
+            principals: ["cluster.local/ns/DSN_NS/sa/default"]
       to:
         - operation:
             methods: ["POST"]
@@ -160,13 +92,14 @@ spec:
         - operation:
             methods: ["GET"]
             paths: ["/signal/strength"]
-    # Intra-cell (other Orion subsystems)
+    # Intra-cell: only default SA
     - from:
         - source:
-            namespaces: ["ORION_NS"]
+            principals: ["cluster.local/ns/ORION_NS/sa/default"]
 
 ---
-# ALLOW: Guidance-nav only from within Orion cell
+# guidance-nav: critical navigation system
+# Allowed: Orion intra-cell only (commands must go through comms-system)
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -181,10 +114,11 @@ spec:
   rules:
     - from:
         - source:
-            namespaces: ["ORION_NS"]
+            principals: ["cluster.local/ns/ORION_NS/sa/default"]
 
 ---
-# ALLOW: Life-support only from within Orion cell (classified crew data)
+# life-support: classified crew health data
+# Allowed: Orion intra-cell only
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -199,14 +133,15 @@ spec:
   rules:
     - from:
         - source:
-            namespaces: ["ORION_NS"]
+            principals: ["cluster.local/ns/ORION_NS/sa/default"]
 
 ---
 # ============================================================
 # DSN CELL
 # ============================================================
 
-# ALLOW: Signal router accepts from Orion, Houston, intra-cell, and gateway
+# signal-router: telemetry relay between Orion and Houston
+# Allowed: Orion (telemetry push), Houston (read), DSN intra-cell, gateway
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -222,18 +157,18 @@ spec:
     # Orion can send telemetry
     - from:
         - source:
-            namespaces: ["ORION_NS"]
+            principals: ["cluster.local/ns/ORION_NS/sa/default"]
     # Houston can read status
     - from:
         - source:
-            namespaces: ["HOUSTON_NS"]
+            principals: ["cluster.local/ns/HOUSTON_NS/sa/default"]
       to:
         - operation:
             methods: ["GET"]
     # Intra-cell (antenna handover)
     - from:
         - source:
-            namespaces: ["DSN_NS"]
+            principals: ["cluster.local/ns/DSN_NS/sa/default"]
     # Gateway (dashboard access)
     - from:
         - source:

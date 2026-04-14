@@ -205,6 +205,93 @@
   .adversary-actions { display: flex; gap: 3px; flex-wrap: wrap; }
   .adversary-actions .btn { font-size: 9px; padding: 3px 6px; }
 
+  /* Attack visualization overlays */
+  .attack-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 30;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; opacity: 0; transition: opacity 0.2s;
+  }
+  .attack-overlay.active { opacity: 1; }
+
+  /* BREACH (attack succeeded - red) */
+  .attack-overlay.breach {
+    background: radial-gradient(ellipse at center, rgba(183,28,28,0.3) 0%, rgba(183,28,28,0) 70%);
+    border: 3px solid rgba(255,82,82,0.6);
+    animation: breachPulse 0.5s ease-in-out 3;
+  }
+  @keyframes breachPulse {
+    0%, 100% { border-color: rgba(255,82,82,0.6); }
+    50% { border-color: rgba(255,82,82,1); background: radial-gradient(ellipse at center, rgba(183,28,28,0.5) 0%, rgba(183,28,28,0) 70%); }
+  }
+  .attack-overlay.breach .attack-icon { font-size: 48px; margin-bottom: 8px; }
+  .attack-overlay.breach .attack-title {
+    color: #ff5252; font-size: 22px; font-weight: bold; letter-spacing: 6px;
+    text-shadow: 0 0 20px rgba(255,82,82,0.8), 0 0 40px rgba(255,82,82,0.4);
+  }
+  .attack-overlay.breach .attack-detail {
+    color: #ff8a80; font-size: 11px; letter-spacing: 2px; margin-top: 4px;
+  }
+
+  /* BLOCKED (attack denied - green shield) */
+  .attack-overlay.blocked {
+    background: radial-gradient(ellipse at center, rgba(27,94,32,0.25) 0%, rgba(27,94,32,0) 70%);
+    border: 2px solid rgba(105,240,174,0.5);
+    animation: shieldPulse 0.4s ease-out 2;
+  }
+  @keyframes shieldPulse {
+    0% { border-color: rgba(105,240,174,1); box-shadow: inset 0 0 60px rgba(105,240,174,0.2); }
+    100% { border-color: rgba(105,240,174,0.3); box-shadow: none; }
+  }
+  .attack-overlay.blocked .attack-icon { font-size: 48px; margin-bottom: 8px; }
+  .attack-overlay.blocked .attack-title {
+    color: #69f0ae; font-size: 22px; font-weight: bold; letter-spacing: 6px;
+    text-shadow: 0 0 20px rgba(105,240,174,0.6);
+  }
+  .attack-overlay.blocked .attack-detail {
+    color: #a5d6a7; font-size: 11px; letter-spacing: 2px; margin-top: 4px;
+  }
+
+  /* Scan line effect during attack */
+  .scanlines {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 25; opacity: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255,0,0,0.03) 0px,
+      rgba(255,0,0,0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    animation: scanMove 0.1s linear infinite;
+  }
+  .scanlines.active { opacity: 1; }
+  .scanlines.green {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,255,100,0.03) 0px,
+      rgba(0,255,100,0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+  @keyframes scanMove {
+    from { background-position-y: 0; }
+    to { background-position-y: 3px; }
+  }
+
+  /* Red vignette on edges during attack */
+  .attack-vignette {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 24; opacity: 0;
+    box-shadow: inset 0 0 80px rgba(255,0,0,0.4), inset 0 0 160px rgba(255,0,0,0.2);
+    transition: opacity 0.3s;
+  }
+  .attack-vignette.active { opacity: 1; }
+  .attack-vignette.green {
+    box-shadow: inset 0 0 60px rgba(0,255,100,0.3), inset 0 0 120px rgba(0,255,100,0.1);
+  }
+
   .trace-body::-webkit-scrollbar { width: 4px; }
   .trace-body::-webkit-scrollbar-track { background: #0d1117; }
   .trace-body::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
@@ -333,6 +420,15 @@
         <div class="hud-label">THROTTLE</div>
         <div class="hud-value" id="hudThrottle">0%</div>
       </div>
+    </div>
+
+    <!-- Attack visualization layers -->
+    <div class="attack-vignette" id="attackVignette"></div>
+    <div class="scanlines" id="attackScanlines"></div>
+    <div class="attack-overlay" id="attackOverlay">
+      <div class="attack-icon" id="attackIcon"></div>
+      <div class="attack-title" id="attackTitle"></div>
+      <div class="attack-detail" id="attackDetail"></div>
     </div>
   </div>
 
@@ -873,19 +969,89 @@ const TARGETS = {
   spoofHouston:{ url: 'http://comms-system:8080/uplink', method: 'POST', label: 'orion/comms-system', proxy: ADVERSARY_ORION },
 };
 
+// Attack type descriptions for the overlay
+const ATTACK_LABELS = {
+  abort:        { name: 'ABORT COMMAND', detail: 'Unauthorized abort signal to Flight Director' },
+  maneuver:     { name: 'NAVIGATION HIJACK', detail: 'Unauthorized course correction to Guidance-Nav' },
+  crewVitals:   { name: 'DATA EXFILTRATION', detail: 'Stealing classified crew vitals from Life Support' },
+  spoofHouston: { name: 'IDENTITY SPOOF', detail: 'Fake command to Comms impersonating CAPCOM' },
+};
+
+function showAttackViz(type, succeeded) {
+  const overlay = document.getElementById('attackOverlay');
+  const vignette = document.getElementById('attackVignette');
+  const scanlines = document.getElementById('attackScanlines');
+  const icon = document.getElementById('attackIcon');
+  const title = document.getElementById('attackTitle');
+  const detail = document.getElementById('attackDetail');
+
+  // Reset classes
+  overlay.className = 'attack-overlay';
+  vignette.className = 'attack-vignette';
+  scanlines.className = 'scanlines';
+
+  if (succeeded) {
+    // BREACH - red alert
+    overlay.classList.add('breach', 'active');
+    vignette.classList.add('active');
+    scanlines.classList.add('active');
+    icon.textContent = '\u{26A0}\u{FE0F}';
+    title.textContent = 'BREACH DETECTED';
+    detail.textContent = (ATTACK_LABELS[type]?.name || 'UNKNOWN') + ' \u{2014} ATTACK SUCCEEDED';
+    document.getElementById('missionStatus').textContent = 'BREACH';
+    document.getElementById('missionStatus').className = 'status-badge status-alert';
+  } else {
+    // BLOCKED - green shield
+    overlay.classList.add('blocked', 'active');
+    vignette.classList.add('green', 'active');
+    scanlines.classList.add('green', 'active');
+    icon.textContent = '\u{1F6E1}\u{FE0F}';
+    title.textContent = 'THREAT NEUTRALIZED';
+    detail.textContent = (ATTACK_LABELS[type]?.name || 'UNKNOWN') + ' \u{2014} DENIED BY ISTIO WAYPOINT';
+    document.getElementById('missionStatus').textContent = 'THREAT BLOCKED';
+    document.getElementById('missionStatus').className = 'status-badge status-nominal';
+  }
+
+  // Auto-dismiss
+  const duration = succeeded ? 3000 : 2000;
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    vignette.classList.remove('active');
+    scanlines.classList.remove('active');
+    if (!succeeded) {
+      document.getElementById('missionStatus').textContent = missionStarted ? 'MISSION ACTIVE' : 'ALL SYSTEMS NOMINAL';
+      document.getElementById('missionStatus').className = 'status-badge status-nominal';
+    } else {
+      setTimeout(() => {
+        document.getElementById('missionStatus').textContent = missionStarted ? 'MISSION ACTIVE' : 'ALL SYSTEMS NOMINAL';
+        document.getElementById('missionStatus').className = 'status-badge status-nominal';
+      }, 2000);
+    }
+  }, duration);
+}
+
 async function adversary(type) {
   const panel = document.querySelector('.adversary-panel');
-  panel.style.boxShadow = '0 0 20px rgba(255,0,0,0.5)';
-  setTimeout(() => panel.style.boxShadow = '', 1500);
+  panel.style.boxShadow = '0 0 30px rgba(255,0,0,0.6)';
+  setTimeout(() => panel.style.boxShadow = '', 2000);
 
   if (type === 'solarFlare') {
     document.getElementById('missionStatus').textContent = 'SOLAR EVENT';
     document.getElementById('missionStatus').className = 'status-badge status-alert';
     document.getElementById('signalStrength').textContent = '-189.7 dBm';
     document.getElementById('signalStrength').style.color = '#ff5252';
+
+    // Show solar flare vignette
+    const vignette = document.getElementById('attackVignette');
+    vignette.className = 'attack-vignette active';
+    const scanlines = document.getElementById('attackScanlines');
+    scanlines.className = 'scanlines active';
+
     addLocalTrace('SOLAR FLARE', 'dsn/goldstone', 'N/A', '/interference', 0, '5000ms', 'Particle event - signal degradation');
     addLocalTrace('dsn/signal-router', 'dsn/madrid', 'POST', '/handover', 200, '3200ms', 'Emergency handover');
     setTimeout(() => {
+      vignette.classList.remove('active');
+      scanlines.classList.remove('active');
       document.getElementById('missionStatus').textContent = 'SIGNAL RECOVERED';
       document.getElementById('missionStatus').className = 'status-badge status-nominal';
       document.getElementById('signalStrength').textContent = '-162.1 dBm';
@@ -897,6 +1063,12 @@ async function adversary(type) {
 
   const target = TARGETS[type];
   if (!target) return;
+
+  // Show scanning effect while request is in flight
+  const scanlines = document.getElementById('attackScanlines');
+  const vignette = document.getElementById('attackVignette');
+  scanlines.className = 'scanlines active';
+  vignette.className = 'attack-vignette active';
 
   const proxyUrl = `${target.proxy}?url=${encodeURIComponent(target.url)}&method=${target.method}&label=${encodeURIComponent(target.label)}`;
 
@@ -917,17 +1089,10 @@ async function adversary(type) {
       errorMsg
     );
 
-    // If attack succeeded, flash warning
-    if (isOk) {
-      document.getElementById('missionStatus').textContent = 'BREACH DETECTED';
-      document.getElementById('missionStatus').className = 'status-badge status-alert';
-      setTimeout(() => {
-        document.getElementById('missionStatus').textContent = 'MISSION ACTIVE';
-        document.getElementById('missionStatus').className = 'status-badge status-nominal';
-      }, 3000);
-    }
+    showAttackViz(type, isOk);
   } catch (e) {
     addLocalTrace('ADVERSARY', target.label, target.method, target.url, 0, '0ms', 'Connection failed: ' + e.message);
+    showAttackViz(type, false);
   }
 }
 
