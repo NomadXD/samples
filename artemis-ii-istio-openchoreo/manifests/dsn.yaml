@@ -9,18 +9,11 @@ metadata:
 spec:
   owner:
     projectName: deep-space-network
-  autoDeploy: true
+  autoDeploy: false
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  parameters:
-    resources:
-      requests:
-        cpu: "5m"
-        memory: "16Mi"
-      limits:
-        cpu: "25m"
-        memory: "32Mi"
+
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -51,18 +44,11 @@ metadata:
 spec:
   owner:
     projectName: deep-space-network
-  autoDeploy: true
+  autoDeploy: false
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  parameters:
-    resources:
-      requests:
-        cpu: "5m"
-        memory: "16Mi"
-      limits:
-        cpu: "25m"
-        memory: "32Mi"
+
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -93,18 +79,11 @@ metadata:
 spec:
   owner:
     projectName: deep-space-network
-  autoDeploy: true
+  autoDeploy: false
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  parameters:
-    resources:
-      requests:
-        cpu: "5m"
-        memory: "16Mi"
-      limits:
-        cpu: "25m"
-        memory: "32Mi"
+
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -135,18 +114,11 @@ metadata:
 spec:
   owner:
     projectName: deep-space-network
-  autoDeploy: true
+  autoDeploy: false
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  parameters:
-    resources:
-      requests:
-        cpu: "5m"
-        memory: "16Mi"
-      limits:
-        cpu: "25m"
-        memory: "32Mi"
+
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload

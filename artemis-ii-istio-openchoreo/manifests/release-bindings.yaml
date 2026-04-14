@@ -1,0 +1,354 @@
+# ReleaseBindings - environment-specific resource overrides for all components
+# These override the default 100m/256Mi from the ClusterComponentType
+
+# --- Houston ---
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: flight-director-development
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+    componentName: flight-director
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: capcom-development
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+    componentName: capcom
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: telemetry-monitor-development
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+    componentName: telemetry-monitor
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: flight-dynamics-development
+  namespace: default
+spec:
+  owner:
+    projectName: houston
+    componentName: flight-dynamics
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+
+# --- Orion ---
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: guidance-nav-development
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+    componentName: guidance-nav
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: life-support-development
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+    componentName: life-support
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: crew-interface-development
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+    componentName: crew-interface
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: comms-system-development
+  namespace: default
+spec:
+  owner:
+    projectName: orion
+    componentName: comms-system
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+
+# --- Deep Space Network ---
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: signal-router-development
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+    componentName: signal-router
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: goldstone-development
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+    componentName: goldstone
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: madrid-development
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+    componentName: madrid
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: canberra-development
+  namespace: default
+spec:
+  owner:
+    projectName: deep-space-network
+    componentName: canberra
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+
+# --- Kennedy ---
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: launch-control-development
+  namespace: default
+spec:
+  owner:
+    projectName: kennedy
+    componentName: launch-control
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: ground-systems-development
+  namespace: default
+spec:
+  owner:
+    projectName: kennedy
+    componentName: ground-systems
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: weather-station-development
+  namespace: default
+spec:
+  owner:
+    projectName: kennedy
+    componentName: weather-station
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: pad-operations-development
+  namespace: default
+spec:
+  owner:
+    projectName: kennedy
+    componentName: pad-operations
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+
+# --- ESA ---
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: service-module-monitor-development
+  namespace: default
+spec:
+  owner:
+    projectName: esa-ops
+    componentName: service-module-monitor
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
+---
+apiVersion: openchoreo.dev/v1alpha1
+kind: ReleaseBinding
+metadata:
+  name: mission-relay-development
+  namespace: default
+spec:
+  owner:
+    projectName: esa-ops
+    componentName: mission-relay
+  environment: development
+  componentTypeEnvironmentConfigs:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
