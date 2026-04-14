@@ -9,7 +9,7 @@ metadata:
 spec:
   owner:
     projectName: esa-ops
-  autoDeploy: false
+  autoDeploy: true
   componentType:
     kind: ClusterComponentType
     name: deployment/service
@@ -44,7 +44,7 @@ metadata:
 spec:
   owner:
     projectName: esa-ops
-  autoDeploy: false
+  autoDeploy: true
   componentType:
     kind: ClusterComponentType
     name: deployment/service

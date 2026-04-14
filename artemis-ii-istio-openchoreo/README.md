@@ -268,7 +268,7 @@ gateway-default-istio-7d9b94d647-dzcfk    1/1     Running   # <-- Istio gateway
 
 ## Deploying the Artemis II Demo
 
-### Step 7: Create Projects and Deploy Components
+### Step 7: Create Projects and Components
 
 ```bash
 REPO="https://raw.githubusercontent.com/NomadXD/samples/main/artemis-ii-istio-openchoreo"
@@ -287,7 +287,15 @@ Wait for all 5 Cell namespaces to be created:
 kubectl get ns | grep dp-default
 ```
 
-### Step 8: Discover the Cell Namespaces
+### Step 8: Override Resource Defaults
+
+The components are auto-deployed with default resource requests (100m CPU / 256Mi memory). Apply the ReleaseBindings to override with lower values suitable for a k3d cluster:
+
+```bash
+kubectl apply -f $REPO/manifests/release-bindings.yaml
+```
+
+### Step 9: Discover the Cell Namespaces
 
 ```bash
 export HOUSTON_NS=$(kubectl get ns -o name | grep dp-default-houston | cut -d/ -f2)
@@ -297,7 +305,7 @@ export KENNEDY_NS=$(kubectl get ns -o name | grep dp-default-kennedy | cut -d/ -
 export ESA_NS=$(kubectl get ns -o name | grep dp-default-esa | cut -d/ -f2)
 ```
 
-### Step 9: Enroll Cells in Istio Ambient Mesh
+### Step 10: Enroll Cells in Istio Ambient Mesh
 
 ```bash
 for ns in $HOUSTON_NS $ORION_NS $DSN_NS $KENNEDY_NS $ESA_NS; do
@@ -307,7 +315,7 @@ for ns in $HOUSTON_NS $ORION_NS $DSN_NS $KENNEDY_NS $ESA_NS; do
 done
 ```
 
-### Step 10: Deploy the Adversary
+### Step 11: Deploy the Adversary
 
 Deploy rogue pods into the Orion and Houston Cells. Without any security policies in place, the adversary can freely access services within the Cell:
 
@@ -320,7 +328,7 @@ curl -fsSL $REPO/manifests/adversary.yaml | \
 
 Open the dashboard and use the **Attack Simulation** panel to launch attacks. All attacks should succeed with **200 OK** responses — the adversary has unrestricted access.
 
-### Step 11: Enable Zero-Trust Security
+### Step 12: Enable Zero-Trust Security
 
 Now deploy waypoint proxies and apply authorization policies to lock down the mesh:
 

@@ -9,7 +9,7 @@ metadata:
 spec:
   owner:
     projectName: houston
-  autoDeploy: false
+  autoDeploy: true
   componentType:
     kind: ClusterComponentType
     name: deployment/service
@@ -44,7 +44,7 @@ metadata:
 spec:
   owner:
     projectName: houston
-  autoDeploy: false
+  autoDeploy: true
   componentType:
     kind: ClusterComponentType
     name: deployment/service
@@ -79,7 +79,7 @@ metadata:
 spec:
   owner:
     projectName: houston
-  autoDeploy: false
+  autoDeploy: true
   componentType:
     kind: ClusterComponentType
     name: deployment/service
@@ -114,7 +114,7 @@ metadata:
 spec:
   owner:
     projectName: houston
-  autoDeploy: false
+  autoDeploy: true
   componentType:
     kind: ClusterComponentType
     name: deployment/service
