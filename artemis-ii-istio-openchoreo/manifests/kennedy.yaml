@@ -13,15 +13,14 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  environmentConfigs:
-    - environmentName: development
-      resources:
-        requests:
-          cpu: "5m"
-          memory: "16Mi"
-        limits:
-          cpu: "25m"
-          memory: "32Mi"
+  parameters:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -56,15 +55,14 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  environmentConfigs:
-    - environmentName: development
-      resources:
-        requests:
-          cpu: "5m"
-          memory: "16Mi"
-        limits:
-          cpu: "25m"
-          memory: "32Mi"
+  parameters:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -99,15 +97,14 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  environmentConfigs:
-    - environmentName: development
-      resources:
-        requests:
-          cpu: "5m"
-          memory: "16Mi"
-        limits:
-          cpu: "25m"
-          memory: "32Mi"
+  parameters:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
@@ -142,15 +139,14 @@ spec:
   componentType:
     kind: ClusterComponentType
     name: deployment/service
-  environmentConfigs:
-    - environmentName: development
-      resources:
-        requests:
-          cpu: "5m"
-          memory: "16Mi"
-        limits:
-          cpu: "25m"
-          memory: "32Mi"
+  parameters:
+    resources:
+      requests:
+        cpu: "5m"
+        memory: "16Mi"
+      limits:
+        cpu: "25m"
+        memory: "32Mi"
 ---
 apiVersion: openchoreo.dev/v1alpha1
 kind: Workload
