@@ -1,4 +1,4 @@
-# Artemis II Demo: Zero-Trust Networking with OpenChoreo and Istio Ambient Mesh
+# Artemis II Demo: Zero Trust Networking for OpenChoreo with Istio Ambient Mesh
 
 A simulated NASA Artemis II mission demonstrating how OpenChoreo Cell architecture and Istio ambient mesh create defense-in-depth for Kubernetes workloads. 5 mission control centers, 18 microservices, and an adversary trying to hijack the spacecraft.
 
@@ -326,7 +326,7 @@ Open the dashboard and use the **Attack Simulation** panel to launch attacks. Al
 
 ![Breach — all attacks succeed](breach.png)
 
-### Step 11: Enable Zero-Trust Security
+### Step 11: Enable Zero Trust Security
 
 Now deploy waypoint proxies and apply authorization policies to lock down the mesh:
 
@@ -336,7 +336,7 @@ for ns in $HOUSTON_NS $ORION_NS $DSN_NS; do
   istioctl waypoint apply -n $ns --enroll-namespace
 done
 
-# Apply zero-trust AuthorizationPolicies
+# Apply zero trust AuthorizationPolicies
 curl -fsSL $REPO/manifests/istio/auth-policies.yaml | \
   sed "s/HOUSTON_NS/$HOUSTON_NS/g" | \
   sed "s/ORION_NS/$ORION_NS/g" | \
