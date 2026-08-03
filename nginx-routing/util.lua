@@ -1,0 +1,1 @@
+                --local redisResponse, err = getRedisValue(sessionId, ngx.var.REDIS_HOST, ngx.var.REDIS_PORT, ngx.var.REDIS_SSL, ngx.var.REDIS_SSL_VERIFY, ngx.var.REDIS_PASSWORD, ngx.var.REDIS_DATABASE, "foo")
