@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-text=backend", "-listen=:5678"]
+          ports:
+            - containerPort: 5678
+---
+# Headless Service so STRICT_DNS in the Envoy bootstrap resolves to all pod IPs
+# instead of the single ClusterIP VIP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  clusterIP: None
+  selector:
+    app: backend
+  ports:
+    - port: 5678
+      targetPort: 5678

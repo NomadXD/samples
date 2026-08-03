@@ -1,0 +1,8 @@
+# Single-worker kind cluster. Priority-based routing doesn't depend on
+# node topology, so colocating all backends on one node is fine.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: envoy-priority
+nodes:
+  - role: control-plane
+  - role: worker

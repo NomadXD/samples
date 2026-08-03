@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: envoy }
+  template:
+    metadata:
+      labels: { app: envoy }
+    spec:
+      # Pin Envoy to the same zone as node.locality.zone in the bootstrap.
+      # Required so the pod actually runs in us-east-1a; the bootstrap
+      # itself doesn't constrain scheduling, only Envoy's view of itself.
+      nodeSelector:
+        topology.kubernetes.io/zone: us-east-1a
+      containers:
+        - name: envoy
+          image: envoyproxy/envoy:v1.37.2
+          args: ["-c", "/etc/envoy/envoy.yaml"]
+          ports:
+            - { containerPort: 10000, name: http }
+            - { containerPort: 9901, name: admin }
+          volumeMounts:
+            - { name: cfg, mountPath: /etc/envoy }
+      volumes:
+        - name: cfg
+          configMap:
+            name: envoy-bootstrap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy
+spec:
+  selector: { app: envoy }
+  ports:
+    - { name: http, port: 10000, targetPort: 10000 }
+    - { name: admin, port: 9901, targetPort: 9901 }

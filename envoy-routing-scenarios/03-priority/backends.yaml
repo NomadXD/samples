@@ -1,0 +1,61 @@
+# Two backend Deployments: primary (P=0) and fallback (P=1). Each has its
+# own headless Service so STRICT_DNS in the Envoy bootstrap can resolve
+# them as separate LocalityLbEndpoints groups with distinct priorities.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-primary
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: backend, tier: primary }
+  template:
+    metadata:
+      labels: { app: backend, tier: primary }
+    spec:
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-text=primary", "-listen=:5678"]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-primary
+spec:
+  clusterIP: None
+  selector: { app: backend, tier: primary }
+  ports:
+    - { port: 5678, targetPort: 5678 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-fallback
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: backend, tier: fallback }
+  template:
+    metadata:
+      labels: { app: backend, tier: fallback }
+    spec:
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-text=fallback", "-listen=:5678"]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-fallback
+spec:
+  clusterIP: None
+  selector: { app: backend, tier: fallback }
+  ports:
+    - { port: 5678, targetPort: 5678 }

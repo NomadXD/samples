@@ -1,0 +1,97 @@
+# One Deployment + headless Service per zone. nodeSelector pins each
+# Deployment to its zone so the resulting EndpointSlices carry that zone.
+# Each backend echoes its zone name so curl output makes routing decisions
+# immediately visible.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-a
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: backend, zone: a }
+  template:
+    metadata:
+      labels: { app: backend, zone: a }
+    spec:
+      nodeSelector:
+        topology.kubernetes.io/zone: us-east-1a
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-text=zone-a", "-listen=:5678"]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-a
+spec:
+  clusterIP: None
+  selector: { app: backend, zone: a }
+  ports:
+    - { port: 5678, targetPort: 5678 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-b
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: backend, zone: b }
+  template:
+    metadata:
+      labels: { app: backend, zone: b }
+    spec:
+      nodeSelector:
+        topology.kubernetes.io/zone: us-east-1b
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-text=zone-b", "-listen=:5678"]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-b
+spec:
+  clusterIP: None
+  selector: { app: backend, zone: b }
+  ports:
+    - { port: 5678, targetPort: 5678 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-c
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: backend, zone: c }
+  template:
+    metadata:
+      labels: { app: backend, zone: c }
+    spec:
+      nodeSelector:
+        topology.kubernetes.io/zone: us-east-1c
+      containers:
+        - name: echo
+          image: hashicorp/http-echo:1.0.0
+          args: ["-text=zone-c", "-listen=:5678"]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-c
+spec:
+  clusterIP: None
+  selector: { app: backend, zone: c }
+  ports:
+    - { port: 5678, targetPort: 5678 }

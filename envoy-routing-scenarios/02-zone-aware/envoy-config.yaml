@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-bootstrap
+data:
+  envoy.yaml: |
+    # node.locality is what Envoy compares against each LocalityLbEndpoints
+    # group's locality to decide what counts as "local". Set this manually
+    # for the test; in production it would be wired in via downward API or
+    # an init container reading the host node's labels.
+    node:
+      id: envoy-zone-aware
+      cluster: envoy-zone-aware
+      locality:
+        region: us-east-1
+        zone: us-east-1a
+        sub_zone: ""
+
+    # Envoy's zone-aware LB requires a "local cluster" representing the
+    # proxy fleet itself, even when force_local_zone is set. Without it,
+    # earlyExitNonLocalityRouting() bails out before zone-aware logic runs.
+    # envoy-self (defined below) is a STRICT_DNS cluster pointing at this
+    # Envoy's own Service, with a single LocalityLbEndpoints group pinned
+    # to us-east-1a -- matching node.locality.zone above.
+    cluster_manager:
+      local_cluster_name: envoy-self
+
+    static_resources:
+      listeners:
+        - name: http
+          address:
+            socket_address: { address: 0.0.0.0, port_value: 10000 }
+          filter_chains:
+            - filters:
+                - name: envoy.filters.network.http_connection_manager
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                    stat_prefix: ingress
+                    route_config:
+                      virtual_hosts:
+                        - name: vh
+                          domains: ["*"]
+                          routes:
+                            - match: { prefix: "/" }
+                              route: { cluster: backend }
+                    http_filters:
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+      clusters:
+        - name: backend
+          type: STRICT_DNS
+          connect_timeout: 1s
+          # force_local_zone lives on the *typed* load_balancing_policy
+          # extension (envoyproxy/envoy#39058), not the legacy
+          # common_lb_config.zone_aware_lb_config. To exercise it we use
+          # the round_robin policy extension and put zone-aware config
+          # inside its locality_lb_config.
+          load_balancing_policy:
+            policies:
+              - typed_extension_config:
+                  name: envoy.load_balancing_policies.round_robin
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.load_balancing_policies.round_robin.v3.RoundRobin
+                    locality_lb_config:
+                      zone_aware_lb_config:
+                        routing_enabled: { value: 100 }
+                        # Disable the default 6-endpoint cluster minimum
+                        # so zone-aware kicks in with the small backend
+                        # counts used in this test.
+                        min_cluster_size: 1
+                        # Remove or comment out force_local_zone to
+                        # observe the weighted prefer-local behavior
+                        # instead of strict-local.
+                        force_local_zone:
+                          min_size: 1
+          load_assignment:
+            cluster_name: backend
+            # One LocalityLbEndpoints per zone. Each group's locality is
+            # what Envoy matches against node.locality above.
+            endpoints:
+              - locality: { region: us-east-1, zone: us-east-1a }
+                lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: backend-a.default.svc.cluster.local
+                          port_value: 5678
+              - locality: { region: us-east-1, zone: us-east-1b }
+                lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: backend-b.default.svc.cluster.local
+                          port_value: 5678
+              - locality: { region: us-east-1, zone: us-east-1c }
+                lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: backend-c.default.svc.cluster.local
+                          port_value: 5678
+
+        - name: envoy-self
+          type: STRICT_DNS
+          connect_timeout: 1s
+          # Pinned to us-east-1a -- matches node.locality.zone, so the LB
+          # treats this as having a local locality with >=1 host, which is
+          # what gates entry into the zone-aware code path.
+          load_assignment:
+            cluster_name: envoy-self
+            endpoints:
+              - locality: { region: us-east-1, zone: us-east-1a }
+                lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: envoy.default.svc.cluster.local
+                          port_value: 10000
+
+    admin:
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 9901 }
