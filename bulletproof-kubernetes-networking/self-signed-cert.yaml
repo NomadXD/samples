@@ -1,0 +1,25 @@
+---
+# Generate a self-signed certificate for testing
+apiVersion: v1
+kind: Secret
+metadata:
+  name: external-gateway-cert
+  namespace: gateway-system
+type: kubernetes.io/tls
+data:
+  # These are base64 encoded placeholder values
+  # You'll need to replace them with actual certificate data
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t...  # Replace with your base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t...  # Replace with your base64 encoded private key
+---
+# Script to generate the certificate
+# Run these commands to generate a self-signed certificate:
+#
+# 1. Generate private key
+# openssl genrsa -out tls.key 2048
+#
+# 2. Generate certificate (valid for 365 days)
+# openssl req -new -x509 -key tls.key -out tls.crt -days 365 -subj "/CN=your-domain.com"
+#
+# 3. Create the secret
+# kubectl create secret tls external-gateway-cert --cert=tls.crt --key=tls.key -n gateway-system

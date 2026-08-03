@@ -1,0 +1,74 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: envoy-gateway-system
+spec:
+  gatewayClassName: eg
+  listeners:
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: external-gateway-cert
+          - name: abc-com-cert
+          - name: foo-com-cert
+          - name: example-org-cert
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [tenant-sales, tenant-marketing, tenant-finance, default]
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: external-gateway
+#   namespace: envoy-gateway-system
+# spec:
+#   type: LoadBalancer
+#   ports:
+#     - name: https
+#       port: 443
+#       protocol: TCP
+#   selector:
+#     gateway.envoyproxy.io/gateway-name: external-gateway
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: internal-gateway
+  namespace: envoy-gateway-system
+spec:
+  gatewayClassName: eg
+  listeners:
+    - name: http
+      port: 8080
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [tenant-sales, tenant-marketing, tenant-finance]
+---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: internal-gateway
+#   namespace: envoy-gateway-system
+# spec:
+#   type: LoadBalancer # Or ClusterIP if you don't need a load balancer
+#   ports:
+#     - name: http
+#       port: 8080
+#       protocol: TCP
+#   selector:
+#     gateway.envoyproxy.io/gateway-name: internal-gateway

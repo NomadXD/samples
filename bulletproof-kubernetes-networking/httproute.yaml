@@ -1,0 +1,113 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: sales-external-route
+  namespace: tenant-sales
+spec:
+  parentRefs:
+  - name: external-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/sales
+    backendRefs:
+    - name: sales-app-1
+      port: 80
+      weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: sales-internal-route
+  namespace: tenant-sales
+spec:
+  parentRefs:
+  - name: internal-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /internal/sales
+    backendRefs:
+    - name: sales-app-1
+      port: 80
+      weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: marketing-external-route
+  namespace: tenant-marketing
+spec:
+  parentRefs:
+  - name: external-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/marketing
+    backendRefs:
+    - name: marketing-app-1
+      port: 80
+      weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: marketing-internal-route
+  namespace: tenant-marketing
+spec:
+  parentRefs:
+  - name: internal-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /internal/marketing
+    backendRefs:
+    - name: marketing-app-1
+      port: 80
+      weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: finance-external-route
+  namespace: tenant-finance
+spec:
+  parentRefs:
+  - name: external-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/finance
+    backendRefs:
+    - name: finance-app-1
+      port: 80
+      weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: finance-internal-route
+  namespace: tenant-finance
+spec:
+  parentRefs:
+  - name: internal-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /internal/finance
+    backendRefs:
+    - name: finance-app-1
+      port: 80
+      weight: 1

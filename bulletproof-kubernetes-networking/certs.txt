@@ -1,0 +1,33 @@
+# Certificate for abc.com
+openssl req -x509 -newkey rsa:2048 -keyout abc.com.key -out abc.com.crt \
+  -days 365 -nodes -subj "/CN=abc.com"
+kubectl create secret tls abc-com-cert --cert=abc.com.crt --key=abc.com.key -n envoy-gateway-system
+
+# Certificate for foo.com  
+openssl req -x509 -newkey rsa:2048 -keyout foo.com.key -out foo.com.crt \
+  -days 365 -nodes -subj "/CN=foo.com"
+kubectl create secret tls foo-com-cert --cert=foo.com.crt --key=foo.com.key -n envoy-gateway-system
+
+# Certificate for example.org
+openssl req -x509 -newkey rsa:2048 -keyout example.org.key -out example.org.crt \
+  -days 365 -nodes -subj "/CN=example.org"
+kubectl create secret tls example-org-cert --cert=example.org.crt --key=example.org.key -n envoy-gateway-system
+
+
+# Test abc.com
+curl -v -H "Host: abc.com" \
+  --resolve "abc.com:443:<GATEWAY_IP>" \
+  --cacert abc.com.crt \
+  https://abc.com/
+
+# Test foo.com
+curl -v -H "Host: foo.com" \
+  --resolve "foo.com:443:<GATEWAY_IP>" \
+  --cacert foo.com.crt \
+  https://foo.com/
+
+# Test example.org
+curl -v -H "Host: example.org" \
+  --resolve "example.org:443:<GATEWAY_IP>" \
+  --cacert example.org.crt \
+  https://example.org/
